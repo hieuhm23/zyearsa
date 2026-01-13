@@ -79,3 +79,44 @@ export const PRODUCTS = [
         ]
     },
 ];
+
+// Dữ liệu Chuẩn Quốc Gia (Giả lập) - Master Data
+// Đây là danh mục thuốc chuẩn, giúp người dùng không phải gõ tay
+export const GLOBAL_DRUG_DATABASE = [
+    {
+        id: '8934560000000', // Mã vạch giả định
+        name: 'Efferalgan 500mg (Sủi)',
+        activeIngredient: 'Paracetamol',
+        concentration: '500mg',
+        unit: 'Hộp',
+        image: 'https://cdn.nhathuoclongchau.com.vn/unsafe/800x0/https://cms-prod.s3-sgn09.fptcloud.com/00000862_efferalgan_500mg_bristol_myers_squibb_16vien_sui_9029_60fd_large_1549646b14.jpg',
+        manufacturer: 'UPSA (Pháp)'
+    },
+    {
+        id: '8939998887776',
+        name: 'Smecta (Thuốc bột pha)',
+        activeIngredient: 'Diosmectite',
+        concentration: '3g',
+        unit: 'Hộp',
+        image: 'https://cdn.nhathuoclongchau.com.vn/unsafe/800x0/https://cms-prod.s3-sgn09.fptcloud.com/00000857_smecta_3g_6970_62ce_large_79a78182b8.jpg',
+        manufacturer: 'Ipsen (Pháp)'
+    },
+    {
+        id: '8931234567890',
+        name: 'Berocca Performance Mango',
+        activeIngredient: 'Vitamin tổng hợp',
+        concentration: '',
+        unit: 'Tuýp',
+        image: 'https://cdn.nhathuoclongchau.com.vn/unsafe/800x0/https://cms-prod.s3-sgn09.fptcloud.com/00017122_berocca_performance_mango_10v_8231_6071_large_0ec3c53018.jpg',
+        manufacturer: 'Bayer'
+    },
+    {
+        id: '8938887776665',
+        name: 'Dung dịch vệ sinh phụ nữ Dạ Hương',
+        activeIngredient: 'Muối, Lô hội',
+        concentration: '100ml',
+        unit: 'Chai',
+        image: 'https://cdn.nhathuoclongchau.com.vn/unsafe/800x0/https://cms-prod.s3-sgn09.fptcloud.com/00006248_da_huong_100ml_xanh_3489_615c_large_cb6d0794fd.jpg',
+        manufacturer: 'Hoa Linh'
+    }
+];

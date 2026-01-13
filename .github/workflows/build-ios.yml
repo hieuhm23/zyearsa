@@ -41,14 +41,20 @@ jobs:
           cd ios
           pod install --repo-update
 
-      - name: 🔧 Patch Pods for No Code Signing (Crucial for Exit 65 Fix)
-        # Bước này cực quan trọng: Duyệt qua tất cả các target trong Pods (thư viện) 
-        # và TẮT YÊU CẦU KÝ SỐ thủ công để tránh lỗi Exit Code 65
+      - name: 🔧 Force Remove Signing (Aggressive)
         run: |
           cd ios
-          find Pods -name "project.pbxproj" -exec sed -i '' 's/CODE_SIGNING_ALLOWED = YES/CODE_SIGNING_ALLOWED = NO/g' {} +
-          find Pods -name "project.pbxproj" -exec sed -i '' 's/CODE_SIGNING_REQUIRED = YES/CODE_SIGNING_REQUIRED = NO/g' {} +
-          echo "✅ Patched all Pods to disable Code Signing"
+          # Xóa sạch các thiết lập Signing trong project chính và tất cả Pods
+          find . -name "project.pbxproj" -exec sed -i '' '/CODE_SIGN_IDENTITY/d' {} +
+          find . -name "project.pbxproj" -exec sed -i '' '/DEVELOPMENT_TEAM/d' {} +
+          find . -name "project.pbxproj" -exec sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' {} +
+          find . -name "project.pbxproj" -exec sed -i '' '/CODE_SIGN_ENTITLEMENTS/d' {} +
+          
+          # Tắt bắt buộc Signing
+          find . -name "project.pbxproj" -exec sed -i '' 's/CODE_SIGNING_REQUIRED = YES/CODE_SIGNING_REQUIRED = NO/g' {} +
+          find . -name "project.pbxproj" -exec sed -i '' 's/CODE_SIGNING_ALLOWED = YES/CODE_SIGNING_ALLOWED = NO/g' {} +
+          
+          echo "✅ Removed all signing configurations."
 
       - name: 🔍 Find project info
         id: project
@@ -74,7 +80,8 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             AD_HOC_CODE_SIGNING_ALLOWED=NO \
-            clean build
+            clean build \
+            | xcpretty && exit ${PIPESTATUS[0]}
 
       - name: 📦 Pack to IPA
         run: |

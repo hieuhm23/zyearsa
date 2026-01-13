@@ -50,6 +50,19 @@ jobs:
           echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
           echo "Found: $WORKSPACE / $SCHEME"
 
+      - name: 🔧 Fix Signing Issues (Force Manual)
+        run: |
+          # Tìm file project (thường nằm trong folder .xcodeproj)
+          PROJECT_FILE=$(find ios -name "project.pbxproj" | head -1)
+          echo "Patching project file: $PROJECT_FILE"
+          
+          # Tắt Code Sign Style Automatic -> Manual
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PROJECT_FILE" || true
+          
+          # Xóa dòng Development Team nếu có
+          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/g' "$PROJECT_FILE" || true
+
+
       - name: 🚀 Build iOS App (No Sign)
         run: |
           cd ios

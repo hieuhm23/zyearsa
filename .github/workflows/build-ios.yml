@@ -31,5 +31,6 @@ jobs:
 
       - name: 🚀 Build iOS App
         # Bỏ --no-wait để chờ build xong và lấy link
-        # Thêm --json để dễ parse nếu cần, hoặc để mặc định để xem log
+        env:
+          EXPO_TOKEN: ${{ secrets.TOKE }}
         run: eas build --platform ios --profile production --non-interactive

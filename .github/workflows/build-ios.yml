@@ -34,8 +34,21 @@ jobs:
         run: npx expo prebuild --platform ios --clean
         env:
           EAS_NO_VCS: 1
-          # Thêm Project ID vào đây cho chắc chắn (lấy từ app.json của bạn)
           EAS_PROJECT_ID: 22440a9f-50a7-4aca-9af3-6a3a1c453321
+
+      - name: 🔧 Force Remove Signing (Crucial for GitHub Actions)
+        run: |
+          cd ios
+          PROJECT=$(find . -name "*.xcodeproj" | head -1)
+          PBXPROJ="$PROJECT/project.pbxproj"
+          
+          echo "🔧 Patching $PBXPROJ to permanently disable signing..."
+          
+          # Biến đổi tất cả dòng CodeSign thành Manual hoặc Rỗng
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
+          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/g' "$PBXPROJ"
+          sed -i '' 's/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = "";/g' "$PBXPROJ"
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "";/g' "$PBXPROJ"
 
       - name: 📦 Install CocoaPods
         run: |
@@ -50,11 +63,13 @@ jobs:
           SCHEME=$(echo $WORKSPACE | sed 's/.xcworkspace//')
           echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
           echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
-          echo "Found: $WORKSPACE / $SCHEME"
 
       - name: 🚀 Build iOS App (No Sign)
         run: |
           cd ios
+          # Dùng pipefail để bắt lỗi thật
+          set -o pipefail
+          
           xcodebuild \
             -workspace "${{ steps.project.outputs.workspace }}" \
             -scheme "${{ steps.project.outputs.scheme }}" \
@@ -65,19 +80,19 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            DEVELOPMENT_TEAM="" \
-            AD_HOC_CODE_SIGNING_ALLOWED=YES
-
+            EXPANDED_CODE_SIGN_IDENTITY="" \
+            EXPANDED_CODE_SIGN_IDENTITY_XCODE="" \
+            EXPANDED_PROVISIONING_PROFILE="" 
+            
       - name: 📦 Pack to IPA
         run: |
           APP_PATH=$(find ios/build -name "*.app" -type d | head -1)
           if [ -z "$APP_PATH" ]; then
-            echo "Error: No .app file found!"
+            echo "❌ Error: Build failed (No .app found)."
             exit 1
           fi
           
           echo "Found app at: $APP_PATH"
-          
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/
           zip -r TOKE.ipa Payload

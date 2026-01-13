@@ -14,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.hieukka.toke"
+      "bundleIdentifier": "com.hieukka.toke",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Ứng dụng cần truy cập Camera để quét mã vạch thuốc."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -31,7 +34,12 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-barcode-scanner"
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Ứng dụng cần truy cập Camera để quét mã vạch thuốc."
+        }
+      ]
     ],
     "extra": {
       "eas": {

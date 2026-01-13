@@ -1,49 +1,86 @@
-name: Build iOS IPA
+name: Build iOS IPA (No Sign)
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  build:
-    name: EAS Build IPA
-    runs-on: ubuntu-latest
+  build-ios:
+    name: Build Unsigned IPA
+    runs-on: macos-latest  # Chạy trên máy Mac của GitHub
+    
     steps:
-      - name: 🏗 Setup repo
-        uses: actions/checkout@v3
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@v4
 
-      - name: 🏗 Setup Node
-        uses: actions/setup-node@v3
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 20
           cache: npm
 
-      # Bỏ Setup EAS của Expo action để tự cài tay cho chắc
-      # - name: 🏗 Setup EAS
-      #   uses: expo/expo-github-action@v8
-      #   with:
-      #     eas-version: latest
-      #     token: ${{ secrets.TOKE }}
+      - name: 📦 Install dependencies
+        run: npm ci
 
-      - name: 📦 Install dependencies & EAS CLI
-        run: |
-          npm install
-          npm install -g eas-cli
+      - name: 🏗 Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.TOKEN }}
 
-      - name: �️ Check Token (Debug)
+      - name: 🔨 Prebuild iOS (Tạo code Native)
+        run: npx expo prebuild --platform ios --clean
         env:
-          MY_TOKEN: ${{ secrets.TOKEN }}
+          EAS_NO_VCS: 1
+
+      - name: 📦 Install CocoaPods
         run: |
-          if [ -z "$MY_TOKEN" ]; then
-            echo "❌ LỖI RỒI: Không tìm thấy Secret TOKEN. Bạn nhớ thêm vào mục 'Secrets' nhé!"
+          cd ios
+          pod install --repo-update
+
+      - name: 🔍 Find project info
+        id: project
+        run: |
+          cd ios
+          WORKSPACE=$(ls -d *.xcworkspace | head -1)
+          SCHEME=$(echo $WORKSPACE | sed 's/.xcworkspace//')
+          echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
+          echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
+          echo "Found: $WORKSPACE / $SCHEME"
+
+      - name: 🚀 Build iOS App (No Sign)
+        run: |
+          cd ios
+          xcodebuild \
+            -workspace "${{ steps.project.outputs.workspace }}" \
+            -scheme "${{ steps.project.outputs.scheme }}" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM="" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES
+
+      - name: 📦 Pack to IPA
+        run: |
+          APP_PATH=$(find ios/build -name "*.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "Error: No .app file found!"
             exit 1
-          else
-            echo "✅ Đã tìm thấy Secret TOKEN (Độ dài: ${#MY_TOKEN} ký tự)."
           fi
-
-      - name: 🚀 Build iOS App
-        env:
-          EXPO_TOKEN: ${{ secrets.TOKEN }}
-        run: eas build --platform ios --profile production --non-interactive
+          
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r TOKE.ipa Payload
+          
+      - name: 📤 Upload IPA to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOKE-IPA
+          path: TOKE.ipa
+          retention-days: 30

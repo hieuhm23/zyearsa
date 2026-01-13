@@ -23,7 +23,7 @@ jobs:
       - name: 📦 Install dependencies
         run: npm ci
 
-      - name: 🏗 Setup Expo
+      - name: 🏗 Setup Expo (Clean)
         uses: expo/expo-github-action@v8
         with:
           expo-version: latest
@@ -35,20 +35,6 @@ jobs:
         env:
           EAS_NO_VCS: 1
           EAS_PROJECT_ID: 22440a9f-50a7-4aca-9af3-6a3a1c453321
-
-      - name: 🔧 Force Remove Signing (Crucial for GitHub Actions)
-        run: |
-          cd ios
-          PROJECT=$(find . -name "*.xcodeproj" | head -1)
-          PBXPROJ="$PROJECT/project.pbxproj"
-          
-          echo "🔧 Patching $PBXPROJ to permanently disable signing..."
-          
-          # Biến đổi tất cả dòng CodeSign thành Manual hoặc Rỗng
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
-          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/g' "$PBXPROJ"
-          sed -i '' 's/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = "";/g' "$PBXPROJ"
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "";/g' "$PBXPROJ"
 
       - name: 📦 Install CocoaPods
         run: |
@@ -63,13 +49,11 @@ jobs:
           SCHEME=$(echo $WORKSPACE | sed 's/.xcworkspace//')
           echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
           echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
+          echo "Found: $WORKSPACE / $SCHEME"
 
       - name: 🚀 Build iOS App (No Sign)
         run: |
           cd ios
-          # Dùng pipefail để bắt lỗi thật
-          set -o pipefail
-          
           xcodebuild \
             -workspace "${{ steps.project.outputs.workspace }}" \
             -scheme "${{ steps.project.outputs.scheme }}" \
@@ -80,10 +64,9 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            EXPANDED_CODE_SIGN_IDENTITY="" \
-            EXPANDED_CODE_SIGN_IDENTITY_XCODE="" \
-            EXPANDED_PROVISIONING_PROFILE="" 
-            
+            DEVELOPMENT_TEAM="" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES
+
       - name: 📦 Pack to IPA
         run: |
           APP_PATH=$(find ios/build -name "*.app" -type d | head -1)

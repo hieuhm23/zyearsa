@@ -90,11 +90,43 @@ const PosScreen = ({ navigation }: any) => {
     };
 
     const handleFinalPayment = () => {
-        Alert.alert('Thành công', 'Đơn hàng đã được thanh toán và in hóa đơn!', [
+        // 1. Thực hiện trừ kho (Core Logic)
+        cart.forEach(cartItem => {
+            const productIndex = PRODUCTS.findIndex(p => p.id === cartItem.id);
+            if (productIndex > -1) {
+                const product = PRODUCTS[productIndex];
+
+                // Tìm tỉ lệ quy đổi của đơn vị khách mua (VD: Hộp = bao nhiêu viên?)
+                // Giả định đơn vị đầu tiên trong mảng units là đơn vị cơ sở (Viên) - giá thấp nhất
+                // Hoặc dựa vào logic giá: lấy giá đơn vị mua chia cho giá đơn vị nhỏ nhất
+
+                const baseUnit = product.units[0]; // Đơn vị nhỏ nhất (Viên)
+
+                let conversionFactor = 1;
+                // Logic quy đổi đơn giản dựa trên giá (Tạm thời): Giá mua / Giá viên
+                if (baseUnit.price > 0) {
+                    conversionFactor = Math.round(cartItem.price / baseUnit.price);
+                }
+
+                // Nếu conversionFactor < 1 (lỗi), mặc định là 1 (trường hợp mua viên)
+                if (conversionFactor < 1) conversionFactor = 1;
+
+                // Tổng số lượng viên cần trừ
+                const totalDeduct = cartItem.quantity * conversionFactor;
+
+                // Trừ kho
+                PRODUCTS[productIndex].stock -= totalDeduct;
+
+                console.log(`Đã bán ${cartItem.quantity} ${cartItem.unitName} ${product.name}. Trừ kho: ${totalDeduct} đơn vị cơ sở. Tồn còn: ${PRODUCTS[productIndex].stock}`);
+            }
+        });
+
+        Alert.alert('Thành công', 'Đã thanh toán và TRỪ KHO thành công!', [
             {
-                text: 'Hoàn tất', onPress: () => {
+                text: 'OK', onPress: () => {
                     setCheckoutVisible(false);
                     setCart([]);
+                    setCheckoutStep(1);
                 }
             }
         ]);
@@ -256,8 +288,31 @@ const PosScreen = ({ navigation }: any) => {
         }
     };
 
+    // --- HELPER: FORMAT STOCK DISPLAY ---
+    const getStockDisplay = (product: any) => {
+        // Tìm đơn vị lớn nhất (Hộp) và nhỏ nhất (Viên)
+        const baseUnit = product.units[0]; // Nhỏ nhất (giá thấp nhất)
+        const bigUnit = product.units.length > 1 ? product.units[product.units.length - 1] : baseUnit; // Lớn nhất
+
+        const conversion = Math.round(bigUnit.price / (baseUnit.price || 1)); // Tỉ lệ 1 Hộp = ? Viên
+
+        if (conversion > 1) {
+            const boxes = Math.floor(product.stock / conversion);
+            const remainder = product.stock % conversion;
+
+            if (boxes > 0) {
+                return `${boxes} ${bigUnit.name}${remainder > 0 ? ` + ${remainder} ${baseUnit.name} lẻ` : ''}`;
+            } else {
+                return `${product.stock} ${baseUnit.name} (Lẻ)`; // Chưa đủ 1 hộp
+            }
+        }
+
+        return `${product.stock} ${baseUnit.name}`;
+    };
+
     return (
         <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+            {/* ... (Giữ nguyên Header) ... */}
             <StatusBar barStyle="light-content" backgroundColor="#0D47A1" />
 
             {/* HEADER */}
@@ -289,7 +344,10 @@ const PosScreen = ({ navigation }: any) => {
                                 <Image source={{ uri: item.image }} style={styles.resultImage} />
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.resultName}>{item.name}</Text>
-                                    <Text style={{ fontSize: 12, color: '#666' }}>Tồn: {item.stock}</Text>
+                                    {/* NEW: HIỂN THỊ TỒN KHO CHI TIẾT */}
+                                    <Text style={{ fontSize: 13, color: '#2E7D32', fontWeight: '500' }}>
+                                        📦 Kho: {getStockDisplay(item)}
+                                    </Text>
                                 </View>
                                 <Text style={styles.resultPrice}>{item.units[0].price.toLocaleString()}₫</Text>
                             </TouchableOpacity>
@@ -302,7 +360,10 @@ const PosScreen = ({ navigation }: any) => {
             <View style={styles.content}>
                 <View style={styles.orderStatusRow}>
                     <Text style={styles.productCount}>Sản phẩm ({cart.length})</Text>
-                    <Text style={styles.orderType}>Đơn bán tại quầy</Text>
+                    <TouchableOpacity onPress={() => setShowScanner(true)} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <MaterialCommunityIcons name="plus-circle" size={20} color="#0288D1" />
+                        <Text style={[styles.orderType, { marginLeft: 5 }]}>Thêm món</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {cart.length === 0 ? (
@@ -343,6 +404,13 @@ const PosScreen = ({ navigation }: any) => {
                     <View style={styles.modalContent}>
                         {selectedProduct && <Image source={{ uri: selectedProduct.image }} style={styles.modalProductImage} resizeMode="contain" />}
                         <Text style={styles.modalTitle}>{selectedProduct?.name}</Text>
+
+                        {/* UPDATE: Hien thi ten ton kho trong modal */}
+                        {selectedProduct && (
+                            <Text style={{ color: '#666', marginBottom: 10 }}>
+                                Tồn kho hiện tại: <Text style={{ fontWeight: 'bold', color: '#2E7D32' }}>{getStockDisplay(selectedProduct)}</Text>
+                            </Text>
+                        )}
 
                         <View style={{ flexDirection: 'row', gap: 10, marginVertical: 15 }}>
                             {selectedProduct?.units.map((u: any, idx: number) => (

@@ -8,9 +8,12 @@ import WarehouseScreen from './src/screens/WarehouseScreen';
 
 const Stack = createNativeStackNavigator();
 
+import { StatusBar } from 'expo-status-bar';
+
 export default function App() {
   return (
     <NavigationContainer>
+      <StatusBar style="dark" />
       <Stack.Navigator
         initialRouteName="Login"
         screenOptions={{

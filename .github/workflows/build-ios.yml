@@ -20,6 +20,13 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: 🧹 Clean Cache
+        run: |
+          npm cache clean --force
+          rm -rf node_modules
+          rm -rf ios/Pods
+          rm -rf ios/build
+
       - name: 📦 Install dependencies
         run: npm ci
 
@@ -44,7 +51,7 @@ jobs:
       - name: 🔧 Force Remove Signing (Aggressive)
         run: |
           cd ios
-          # Xóa sạch các thiết lập Signing trong project chính và tất cả Pods
+          # Xóa sạch các thiết lập Signing
           find . -name "project.pbxproj" -exec sed -i '' '/CODE_SIGN_IDENTITY/d' {} +
           find . -name "project.pbxproj" -exec sed -i '' '/DEVELOPMENT_TEAM/d' {} +
           find . -name "project.pbxproj" -exec sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' {} +
@@ -53,8 +60,6 @@ jobs:
           # Tắt bắt buộc Signing
           find . -name "project.pbxproj" -exec sed -i '' 's/CODE_SIGNING_REQUIRED = YES/CODE_SIGNING_REQUIRED = NO/g' {} +
           find . -name "project.pbxproj" -exec sed -i '' 's/CODE_SIGNING_ALLOWED = YES/CODE_SIGNING_ALLOWED = NO/g' {} +
-          
-          echo "✅ Removed all signing configurations."
 
       - name: 🔍 Find project info
         id: project
@@ -64,11 +69,11 @@ jobs:
           SCHEME=$(echo $WORKSPACE | sed 's/.xcworkspace//')
           echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
           echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
-          echo "Found: $WORKSPACE / $SCHEME"
 
       - name: 🚀 Build iOS App (No Sign)
         run: |
           cd ios
+          # Tăng log level để debug nếu lỗi
           xcodebuild \
             -workspace "${{ steps.project.outputs.workspace }}" \
             -scheme "${{ steps.project.outputs.scheme }}" \
@@ -91,7 +96,6 @@ jobs:
             exit 1
           fi
           
-          echo "Found app at: $APP_PATH"
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/
           zip -r TOKE.ipa Payload

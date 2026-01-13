@@ -31,6 +31,9 @@ const WarehouseScreen = ({ navigation }: any) => {
     const [lotNumber, setLotNumber] = useState('');
     const [expiryDate, setExpiryDate] = useState('');
 
+    // NEW: Tồn kho hiện tại
+    const [currentStock, setCurrentStock] = useState<string>('');
+
     // Price Data
     const [importPrice, setImportPrice] = useState('');
     const [sellPrice, setSellPrice] = useState('');
@@ -49,21 +52,31 @@ const WarehouseScreen = ({ navigation }: any) => {
             setProductName(existing.name);
             setProductImage(existing.image || null);
             setSellPrice(existing.units?.[0]?.price?.toString() || '0');
-            Alert.alert('Đã có trong kho', `Sản phẩm: ${existing.name}\nNhập thêm số lượng và Date mới.`);
+
+            // Hiển thị tồn kho
+            // Giả định 1 hộp = 120 viên (nếu số lượng > 100) để demo quy đổi
+            const boxCount = Math.floor(existing.stock / 100);
+            const stockText = `${existing.stock}`;
+            setCurrentStock(stockText);
+
+            Alert.alert(
+                'Đã có trong kho',
+                `Sản phẩm: ${existing.name}\n📦 Tồn hiện tại: ${existing.stock} đơn vị`
+            );
         } else {
             // 2. Nếu chưa có -> Tìm trong Master Data (Dữ liệu Quốc gia)
             const masterData = GLOBAL_DRUG_DATABASE.find(p => p.id === code);
 
             if (masterData) {
-                // Trường hợp 2: Thuốc mới nhưng có trong Từ điển chuẩn -> Tự điền form
                 setProductName(masterData.name);
                 setProductImage(masterData.image || null);
                 setUnit(masterData.unit);
+                setCurrentStock('0 (Sản phẩm mới)');
                 Alert.alert('Tìm thấy trong Dữ liệu Quốc gia', `Tự động điền thông tin cho: ${masterData.name}`);
             } else {
-                // Trường hợp 3: Thuốc hoàn toàn mới -> Nhập tay
                 resetFormOnly();
                 setScannedCode(code);
+                setCurrentStock('0 (Sản phẩm mới)');
                 Alert.alert('Sản phẩm mới', 'Mã chưa có dữ liệu. Vui lòng nhập thông tin mới.');
             }
         }
@@ -93,7 +106,10 @@ const WarehouseScreen = ({ navigation }: any) => {
         };
 
         setRecentImports(prev => [newImport, ...prev]);
-        resetForm();
+
+        // Reset giữ lại mã kho để nhập tiếp
+        setScannedCode('');
+        resetFormOnly();
         Alert.alert('Thành công', `Đã nhập vào ${currentWarehouse?.name}`);
     };
 
@@ -105,12 +121,8 @@ const WarehouseScreen = ({ navigation }: any) => {
         setExpiryDate('');
         setImportPrice('');
         setSellPrice('');
+        setCurrentStock('');
     }
-
-    const resetForm = () => {
-        setScannedCode('');
-        resetFormOnly();
-    };
 
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -130,7 +142,7 @@ const WarehouseScreen = ({ navigation }: any) => {
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
                 <ScrollView contentContainerStyle={{ padding: 15, paddingBottom: 50 }}>
 
-                    {/* 1. CHỌN KHO (WAREHOUSE SELECTOR) */}
+                    {/* 1. CHỌN KHO */}
                     <Text style={styles.sectionLabel}>CHỌN KHO NHẬP:</Text>
                     <View style={styles.warehouseList}>
                         {WAREHOUSES.map((w) => (
@@ -189,7 +201,15 @@ const WarehouseScreen = ({ navigation }: any) => {
                     {/* 3. THÔNG TIN & GIÁ */}
                     <View style={styles.card}>
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Tên thuốc</Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <Text style={styles.label}>Tên thuốc</Text>
+                                {/* NEW: HIỂN THỊ TỒN KHO */}
+                                {currentStock !== '' && (
+                                    <Text style={{ color: '#4CAF50', fontWeight: 'bold', fontSize: 12 }}>
+                                        Tồn kho: {currentStock}
+                                    </Text>
+                                )}
+                            </View>
                             <TextInput
                                 style={[styles.input, { fontSize: 16, fontWeight: 'bold' }]}
                                 value={productName}
@@ -305,7 +325,6 @@ const styles = StyleSheet.create({
     },
     headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
 
-    // Warehouse Selector
     sectionLabel: { color: '#888', fontSize: 12, marginBottom: 8, fontWeight: 'bold' },
     warehouseList: { flexDirection: 'row', gap: 10, marginBottom: 20 },
     warehouseChip: {

@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # Cho phép bấm nút chạy thủ công
+  workflow_dispatch:
 
 jobs:
   build:
-    name: EAS Build
+    name: EAS Build IPA
     runs-on: ubuntu-latest
     steps:
       - name: 🏗 Setup repo
@@ -30,4 +30,6 @@ jobs:
         run: npm install
 
       - name: 🚀 Build iOS App
-        run: eas build --platform ios --profile production --non-interactive --no-wait
+        # Bỏ --no-wait để chờ build xong và lấy link
+        # Thêm --json để dễ parse nếu cần, hoặc để mặc định để xem log
+        run: eas build --platform ios --profile production --non-interactive

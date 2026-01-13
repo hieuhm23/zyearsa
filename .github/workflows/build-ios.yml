@@ -41,6 +41,15 @@ jobs:
           cd ios
           pod install --repo-update
 
+      - name: 🔧 Patch Pods for No Code Signing (Crucial for Exit 65 Fix)
+        # Bước này cực quan trọng: Duyệt qua tất cả các target trong Pods (thư viện) 
+        # và TẮT YÊU CẦU KÝ SỐ thủ công để tránh lỗi Exit Code 65
+        run: |
+          cd ios
+          find Pods -name "project.pbxproj" -exec sed -i '' 's/CODE_SIGNING_ALLOWED = YES/CODE_SIGNING_ALLOWED = NO/g' {} +
+          find Pods -name "project.pbxproj" -exec sed -i '' 's/CODE_SIGNING_REQUIRED = YES/CODE_SIGNING_REQUIRED = NO/g' {} +
+          echo "✅ Patched all Pods to disable Code Signing"
+
       - name: 🔍 Find project info
         id: project
         run: |
@@ -64,8 +73,8 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            DEVELOPMENT_TEAM="" \
-            AD_HOC_CODE_SIGNING_ALLOWED=YES
+            AD_HOC_CODE_SIGNING_ALLOWED=NO \
+            clean build
 
       - name: 📦 Pack to IPA
         run: |
@@ -85,4 +94,4 @@ jobs:
         with:
           name: TOKE-IPA
           path: TOKE.ipa
-          retention-days: 30
+          retention-days: 7

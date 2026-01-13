@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "TOKE",
+    "name": "ZyeaRSA",
     "slug": "toke",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.hieukka.toke",
+      "bundleIdentifier": "com.zyea.rsa",
       "infoPlist": {
         "NSCameraUsageDescription": "Ứng dụng cần truy cập Camera để quét mã vạch thuốc."
       }

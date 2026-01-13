@@ -3,18 +3,20 @@ import {
     View,
     Text,
     StyleSheet,
-    SafeAreaView,
     ScrollView,
     TouchableOpacity,
     StatusBar,
     Dimensions,
-    TextInput,
-    ImageBackground
+    TextInput
 } from 'react-native';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }: any) => {
+    const insets = useSafeAreaInsets();
+
     const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
         sales: true,
         warehouse: true,
@@ -30,15 +32,15 @@ const HomeScreen = ({ navigation }: any) => {
             if (item.screen === 'Pos' || item.screen === 'Warehouse') {
                 navigation.navigate(item.screen);
             } else {
-                console.log('Coming soon: ' + item.title);
+                // console.log('Coming soon: ' + item.title);
             }
         }
     };
 
-    const renderGridItem = (title: string, icon: string, screen: string = '', color: string = '#0288D1', customIcon?: boolean) => (
+    const renderGridItem = (title: string, iconName: keyof typeof MaterialCommunityIcons.glyphMap, color: string, screen: string = '') => (
         <TouchableOpacity style={styles.gridItem} onPress={() => handlePress({ screen, title })}>
-            <View style={[styles.iconContainer, { backgroundColor: '#E3F2FD' }]}>
-                <Text style={[styles.iconText, { color: color }]}>{icon}</Text>
+            <View style={[styles.iconContainer, { backgroundColor: `${color}15` }]}>
+                <MaterialCommunityIcons name={iconName} size={28} color={color} />
             </View>
             <Text style={styles.gridTitle} numberOfLines={2}>{title}</Text>
         </TouchableOpacity>
@@ -49,37 +51,36 @@ const HomeScreen = ({ navigation }: any) => {
             <StatusBar barStyle="light-content" backgroundColor="#0D47A1" />
 
             {/* 1. BLUE HEADER SECTION */}
-            <View style={styles.headerContainer}>
-                <SafeAreaView>
-                    <View style={styles.userInfoRow}>
-                        <View style={styles.avatar}>
-                            <Text style={styles.avatarText}>H</Text>
-                        </View>
-                        <View style={styles.userDetail}>
-                            <Text style={styles.userName}>Hoàng Minh Hiếu - 65680</Text>
-                            <Text style={styles.userAddress}>81362 - LC HNI 15 Hoàng Như Tiếp, P. Bồ Đề</Text>
-                        </View>
-                        <TouchableOpacity style={styles.refreshBtn}>
-                            <Text style={{ color: '#fff', fontSize: 18 }}>↻</Text>
-                        </TouchableOpacity>
+            {/* Dynamic paddingTop based on Safe Area Insets */}
+            <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
+                <View style={styles.userInfoRow}>
+                    <View style={styles.avatar}>
+                        <Text style={styles.avatarText}>H</Text>
                     </View>
+                    <View style={styles.userDetail}>
+                        <Text style={styles.userName}>Hoàng Minh Hiếu - 65680</Text>
+                        <Text style={styles.userAddress}>81362 - LC HNI 15 Hoàng Như Tiếp, P. Bồ Đề</Text>
+                    </View>
+                    <TouchableOpacity style={styles.refreshBtn}>
+                        <Ionicons name="reload" size={20} color="#fff" />
+                    </TouchableOpacity>
+                </View>
 
-                    {/* Search Bar */}
-                    <View style={styles.searchBarRow}>
-                        <View style={styles.searchBox}>
-                            <Text style={{ fontSize: 16 }}>🔍</Text>
-                            <TextInput
-                                placeholder="Tìm kiếm chức năng"
-                                placeholderTextColor="#999"
-                                style={styles.searchInput}
-                            />
-                        </View>
-                        <View style={styles.notiBox}>
-                            <Text style={{ fontSize: 20 }}>💊</Text>
-                            <View style={styles.redDot} />
-                        </View>
+                {/* Search Bar */}
+                <View style={styles.searchBarRow}>
+                    <View style={styles.searchBox}>
+                        <Ionicons name="search" size={20} color="#999" />
+                        <TextInput
+                            placeholder="Tìm kiếm chức năng"
+                            placeholderTextColor="#999"
+                            style={styles.searchInput}
+                        />
                     </View>
-                </SafeAreaView>
+                    <View style={styles.notiBox}>
+                        <MaterialCommunityIcons name="pill" size={24} color="#E53935" />
+                        <View style={styles.redDot} />
+                    </View>
+                </View>
             </View>
 
             {/* 2. BODY CONTENT */}
@@ -89,93 +90,101 @@ const HomeScreen = ({ navigation }: any) => {
                     {/* Section: Bán hàng */}
                     <View style={styles.cardSection}>
                         <TouchableOpacity style={styles.cardHeader} onPress={() => toggleSection('sales')}>
-                            <Text style={styles.cardTitle}>🛍 Bán hàng</Text>
-                            <Text style={styles.arrowIcon}>{expandedSections['sales'] ? '▲' : '▼'}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <MaterialCommunityIcons name="shopping" size={18} color="#D81B60" style={{ marginRight: 6 }} />
+                                <Text style={styles.cardTitle}>Bán hàng</Text>
+                            </View>
+                            <Ionicons name={expandedSections['sales'] ? "chevron-up" : "chevron-down"} size={20} color="#999" />
                         </TouchableOpacity>
 
                         {expandedSections['sales'] && (
-                            <View style={styles.gridContainer}>
-                                {renderGridItem('Giỏ hàng', '🛒', 'Pos', '#0288D1')}
-                                {renderGridItem('Cắt liều', '✂️', '', '#F57C00')}
-                                {renderGridItem('Trả hàng', '↩️', '', '#D32F2F')}
-                                {renderGridItem('Tư vấn VX', '💉', '', '#0097A7')}
-                                {renderGridItem('DS đơn VX', '📋', '', '#1976D2')}
-                            </View>
+                            { renderGridItem('Giỏ hàng', 'cart-outline', '#0288D1', 'Pos')}
+                        {renderGridItem('Cắt liều', 'content-cut', '#F57C00')}
+                        {renderGridItem('Trả hàng', 'keyboard-return', '#D32F2F')}
+                        {/* {renderGridItem('Tư vấn VX', 'needle', '#0097A7')} */}
+                        {/* {renderGridItem('DS đơn VX', 'clipboard-list-outline', '#1976D2')} */}
+                    </View>
                         )}
-                    </View>
-
-                    {/* Section: Nhập - Xuất */}
-                    <View style={styles.cardSection}>
-                        <TouchableOpacity style={styles.cardHeader} onPress={() => toggleSection('warehouse')}>
-                            <Text style={styles.cardTitle}>📦 Nhập - xuất hàng</Text>
-                            <Text style={styles.arrowIcon}>{expandedSections['warehouse'] ? '▲' : '▼'}</Text>
-                        </TouchableOpacity>
-
-                        {expandedSections['warehouse'] && (
-                            <View style={styles.gridContainer}>
-                                {renderGridItem('Xuất SD', '📤', 'Warehouse', '#FBC02D')}
-                                {renderGridItem('Báo cáo', '📊', 'Report', '#388E3C')}
-                            </View>
-                        )}
-                    </View>
-
-                    {/* Section: Vận hành */}
-                    <View style={styles.cardSection}>
-                        <TouchableOpacity style={styles.cardHeader} onPress={() => toggleSection('operation')}>
-                            <Text style={styles.cardTitle}>⚙️ Vận hành shop</Text>
-                            <Text style={styles.arrowIcon}>{expandedSections['operation'] ? '▲' : '▼'}</Text>
-                        </TouchableOpacity>
-                        {expandedSections['operation'] && (
-                            <View style={styles.gridContainer}>
-                                {renderGridItem('Chấm công', '📅')}
-                                {renderGridItem('KPI', '📈')}
-                            </View>
-                        )}
-                    </View>
-
-                    {/* Footer Image */}
-                    <View style={styles.footerBanner}>
-                        {/* Placeholder for Christmas banner */}
-                        <Text style={{ color: '#999', fontSize: 12, textAlign: 'center' }}>Zyea Pharma System v2.0</Text>
-                    </View>
-
-                </ScrollView>
             </View>
 
-            {/* 3. BOTTOM TAB NAVIGATION */}
-            <View style={styles.bottomTab}>
-                <TouchableOpacity style={styles.tabItemActive}>
-                    <Text style={styles.tabIcon}>🏠</Text>
-                    <Text style={styles.tabLabelActive}>Trang chủ</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.tabItem}>
-                    <Text style={styles.tabIcon}>📄</Text>
-                    <Text style={styles.tabLabel}>Đơn hàng</Text>
-                </TouchableOpacity>
-
-                {/* Center SCAN Button */}
-                <TouchableOpacity style={styles.scanWrapper} onPress={() => navigation.navigate('Pos')}>
-                    <View style={styles.scanBtn}>
-                        <Text style={styles.scanBtnIcon}>📷</Text>
+            {/* Section: Nhập - Xuất */}
+            <View style={styles.cardSection}>
+                <TouchableOpacity style={styles.cardHeader} onPress={() => toggleSection('warehouse')}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <MaterialCommunityIcons name="package-variant-closed" size={18} color="#795548" style={{ marginRight: 6 }} />
+                        <Text style={styles.cardTitle}>Nhập - xuất hàng</Text>
                     </View>
+                    <Ionicons name={expandedSections['warehouse'] ? "chevron-up" : "chevron-down"} size={20} color="#999" />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.tabItem}>
-                    <View>
-                        <Text style={styles.tabIcon}>🔔</Text>
-                        <View style={styles.tabBadge}><Text style={styles.badgeText}>3</Text></View>
+                {expandedSections['warehouse'] && (
+                    <View style={styles.gridContainer}>
+                        {renderGridItem('Xuất SD', 'export', '#FBC02D', 'Warehouse')}
+                        {renderGridItem('Báo cáo', 'chart-bar', '#388E3C', 'Report')}
                     </View>
-                    <Text style={styles.tabLabel}>Thông báo</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.tabItem}>
-                    <Text style={styles.tabIcon}>💬</Text>
-                    <Text style={styles.tabLabel}>Hỗ trợ</Text>
-                </TouchableOpacity>
+                )}
             </View>
 
+            {/* Section: Vận hành */}
+            <View style={styles.cardSection}>
+                <TouchableOpacity style={styles.cardHeader} onPress={() => toggleSection('operation')}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <MaterialCommunityIcons name="cog" size={18} color="#607D8B" style={{ marginRight: 6 }} />
+                        <Text style={styles.cardTitle}>Vận hành shop</Text>
+                    </View>
+                    <Ionicons name={expandedSections['operation'] ? "chevron-up" : "chevron-down"} size={20} color="#999" />
+                </TouchableOpacity>
+                {expandedSections['operation'] && (
+                    <View style={styles.gridContainer}>
+                        {renderGridItem('Chấm công', 'calendar-clock', '#5C6BC0')}
+                        {renderGridItem('KPI', 'target', '#EC407A')}
+                    </View>
+                )}
+            </View>
+
+            {/* Footer Image */}
+            <View style={styles.footerBanner}>
+                <Text style={{ color: '#999', fontSize: 12, textAlign: 'center' }}>Zyea Pharma System v2.0</Text>
+            </View>
+
+        </ScrollView>
+            </View >
+
+    {/* 3. BOTTOM TAB NAVIGATION */ }
+{/* Dynamic paddingBottom based on Safe Area Insets */ }
+<View style={[styles.bottomTab, { paddingBottom: Math.max(insets.bottom, 10), height: 60 + Math.max(insets.bottom, 10) }]}>
+    <TouchableOpacity style={styles.tabItemActive}>
+        <Ionicons name="home" size={24} color="#0D47A1" />
+        <Text style={styles.tabLabelActive}>Trang chủ</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity style={styles.tabItem}>
+        <Ionicons name="document-text-outline" size={24} color="#999" />
+        <Text style={styles.tabLabel}>Đơn hàng</Text>
+    </TouchableOpacity>
+
+    {/* Center SCAN Button */}
+    <TouchableOpacity style={styles.scanWrapper} onPress={() => navigation.navigate('Pos')}>
+        <View style={styles.scanBtn}>
+            <Ionicons name="scan" size={28} color="#fff" />
         </View>
+    </TouchableOpacity>
+
+    <TouchableOpacity style={styles.tabItem}>
+        <View>
+            <Ionicons name="notifications-outline" size={24} color="#999" />
+            <View style={styles.tabBadge}><Text style={styles.badgeText}>3</Text></View>
+        </View>
+        <Text style={styles.tabLabel}>Thông báo</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity style={styles.tabItem}>
+        <Ionicons name="chatbubble-ellipses-outline" size={24} color="#999" />
+        <Text style={styles.tabLabel}>Hỗ trợ</Text>
+    </TouchableOpacity>
+</View>
+
+        </View >
     );
 };
 
@@ -185,10 +194,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#F2F2F2',
     },
     headerContainer: {
-        backgroundColor: '#0D47A1', // Deep Blue Long Chau Style
+        backgroundColor: '#0D47A1',
         paddingBottom: 20,
         paddingHorizontal: 15,
-        paddingTop: 10,
+        // paddingTop handled dynamically
     },
     userInfoRow: {
         flexDirection: 'row',
@@ -271,7 +280,7 @@ const styles = StyleSheet.create({
 
     bodyContainer: {
         flex: 1,
-        marginTop: -10, // Overlap effect if wanted, but keep flat for now
+        marginTop: -10,
         paddingHorizontal: 15,
         paddingTop: 15,
     },
@@ -297,10 +306,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#333',
     },
-    arrowIcon: {
-        color: '#999',
-        fontSize: 12,
-    },
     gridContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -314,13 +319,10 @@ const styles = StyleSheet.create({
     iconContainer: {
         width: 50,
         height: 50,
-        borderRadius: 25,
+        borderRadius: 16, // Bo góc mềm hơn chút (Squircle)
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 8,
-    },
-    iconText: {
-        fontSize: 24,
     },
     gridTitle: {
         fontSize: 12,
@@ -337,12 +339,13 @@ const styles = StyleSheet.create({
     bottomTab: {
         backgroundColor: '#fff',
         flexDirection: 'row',
-        height: 65,
+        // height sẽ được set dynamic trong style inline
         borderTopWidth: 1,
         borderTopColor: '#eee',
         justifyContent: 'space-between',
         paddingHorizontal: 10,
-        alignItems: 'center',
+        alignItems: 'flex-start', // Để icon nằm sát top padding
+        paddingTop: 10
     },
     tabItem: {
         alignItems: 'center',
@@ -352,19 +355,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flex: 1,
     },
-    tabIcon: {
-        fontSize: 22,
-        color: '#999',
-        marginBottom: 3,
-    },
     tabLabel: {
         fontSize: 10,
         color: '#999',
+        marginTop: 3,
     },
     tabLabelActive: {
         fontSize: 10,
         color: '#0D47A1',
         fontWeight: 'bold',
+        marginTop: 3,
     },
     tabBadge: {
         position: 'absolute',
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     },
     // Center Scan Button
     scanWrapper: {
-        top: -20, // Float up
+        top: -25, // Float up more to clear bottom padding
         justifyContent: 'center',
         alignItems: 'center',
         flex: 1,
@@ -404,10 +404,6 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 6,
     },
-    scanBtnIcon: {
-        fontSize: 28,
-    }
-
 });
 
 export default HomeScreen;

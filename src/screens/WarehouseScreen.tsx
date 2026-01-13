@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import {
-    View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Alert, ScrollView
+    View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView, StatusBar
 } from 'react-native';
 import QRScanner from '../components/QRScanner';
 import { PRODUCTS } from '../data/mockData';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const WarehouseScreen = ({ navigation }: any) => {
+    const insets = useSafeAreaInsets();
     const [activeTab, setActiveTab] = useState<'import' | 'transfer'>('import');
     const [scannedProduct, setScannedProduct] = useState<any>(null);
     const [quantity, setQuantity] = useState('');
@@ -38,7 +41,6 @@ const WarehouseScreen = ({ navigation }: any) => {
                 {
                     text: 'Đồng ý',
                     onPress: () => {
-                        // Logic call API update kho ở đây
                         Alert.alert('Thành công', `Đã ${actionText} thành công!`);
                         setScannedProduct(null);
                         setQuantity('');
@@ -50,14 +52,17 @@ const WarehouseScreen = ({ navigation }: any) => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+            <StatusBar barStyle="light-content" backgroundColor="#1C1C1E" />
+
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Text style={styles.backText}>{'< Trở về'}</Text>
+                    <Ionicons name="chevron-back" size={24} color="#007AFF" />
+                    <Text style={styles.backText}>Trở về</Text>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>QUẢN LÝ KHO</Text>
-                <View style={{ width: 60 }} />
+                <View style={{ width: 70 }} />
             </View>
 
             {/* Tabs */}
@@ -66,38 +71,48 @@ const WarehouseScreen = ({ navigation }: any) => {
                     style={[styles.tab, activeTab === 'import' && styles.activeTab]}
                     onPress={() => setActiveTab('import')}
                 >
+                    <MaterialCommunityIcons name="import" size={20} color={activeTab === 'import' ? '#fff' : '#888'} style={{ marginBottom: 4 }} />
                     <Text style={[styles.tabText, activeTab === 'import' && styles.activeTabText]}>NHẬP KHO</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[styles.tab, activeTab === 'transfer' && styles.activeTabTransfer]}
                     onPress={() => setActiveTab('transfer')}
                 >
+                    <MaterialCommunityIcons name="transfer" size={20} color={activeTab === 'transfer' ? '#fff' : '#888'} style={{ marginBottom: 4 }} />
                     <Text style={[styles.tabText, activeTab === 'transfer' && styles.activeTabText]}>CHUYỂN KHO</Text>
                 </TouchableOpacity>
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
-
-                {/* Action Card */}
                 <View style={styles.card}>
-                    <Text style={styles.cardTitle}>
-                        {activeTab === 'import' ? '➕ FORM NHẬP HÀNG' : '📦 FORM CHUYỂN KHO'}
-                    </Text>
+                    <View style={styles.cardHeaderRow}>
+                        <MaterialCommunityIcons
+                            name={activeTab === 'import' ? "package-down" : "truck-delivery"}
+                            size={24}
+                            color={activeTab === 'import' ? "#34C759" : "#FF9500"}
+                        />
+                        <Text style={styles.cardTitle}>
+                            {activeTab === 'import' ? 'FORM NHẬP HÀNG' : 'FORM CHUYỂN KHO'}
+                        </Text>
+                    </View>
 
                     {/* Product Section */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>SẢN PHẨM</Text>
                         {scannedProduct ? (
                             <View style={styles.productDisplay}>
-                                <Text style={styles.productName}>{scannedProduct.name}</Text>
-                                <Text style={styles.productCode}>Mã: {scannedProduct.id} | Tồn: {scannedProduct.stock}</Text>
+                                <View>
+                                    <Text style={styles.productName}>{scannedProduct.name}</Text>
+                                    <Text style={styles.productCode}>Mã: {scannedProduct.id} | Tồn: {scannedProduct.stock}</Text>
+                                </View>
                                 <TouchableOpacity onPress={() => setScannedProduct(null)} style={styles.clearBtn}>
-                                    <Text style={styles.clearText}>Xóa</Text>
+                                    <Ionicons name="trash-outline" size={20} color="#FF3B30" />
                                 </TouchableOpacity>
                             </View>
                         ) : (
                             <TouchableOpacity style={styles.scanBtn} onPress={() => setShowScanner(true)}>
-                                <Text style={styles.scanBtnText}>📷 QUÉT MÃ VẠCH (SCAN)</Text>
+                                <MaterialCommunityIcons name="barcode-scan" size={28} color="#fff" style={{ marginRight: 10 }} />
+                                <Text style={styles.scanBtnText}>QUÉT MÃ VẠCH (SCAN)</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -132,7 +147,7 @@ const WarehouseScreen = ({ navigation }: any) => {
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>GHI CHÚ</Text>
                         <TextInput
-                            style={[styles.input, { height: 80, paddingTop: 15 }]}
+                            style={[styles.input, { height: 80, paddingTop: 15, textAlignVertical: 'top' }]}
                             multiline
                             placeholder="Nhập ghi chú nhập/xuất..."
                             placeholderTextColor="#666"
@@ -149,10 +164,10 @@ const WarehouseScreen = ({ navigation }: any) => {
                         <Text style={styles.submitText}>
                             {activeTab === 'import' ? 'XÁC NHẬN NHẬP KHO' : 'XÁC NHẬN CHUYỂN'}
                         </Text>
+                        <Ionicons name="checkmark-circle" size={20} color="#fff" style={{ marginLeft: 8 }} />
                     </TouchableOpacity>
 
                 </View>
-
             </ScrollView>
 
             <QRScanner
@@ -160,14 +175,14 @@ const WarehouseScreen = ({ navigation }: any) => {
                 onClose={() => setShowScanner(false)}
                 onScan={handleScan}
             />
-        </SafeAreaView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000',
+        backgroundColor: '#000', // Dark Theme for Warehouse
     },
     header: {
         flexDirection: 'row',
@@ -178,11 +193,12 @@ const styles = StyleSheet.create({
         borderBottomColor: '#333',
     },
     backButton: {
-        padding: 5,
+        flexDirection: 'row', alignItems: 'center'
     },
     backText: {
         color: '#007AFF',
         fontSize: 16,
+        marginLeft: 5
     },
     headerTitle: {
         color: '#fff',
@@ -198,22 +214,23 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: 12,
         alignItems: 'center',
-        borderRadius: 8,
+        borderRadius: 12,
         backgroundColor: '#1C1C1E',
         borderWidth: 1,
         borderColor: '#333',
     },
     activeTab: {
-        backgroundColor: '#34C759', // Green for Import
+        backgroundColor: 'rgba(52, 199, 89, 0.2)', // Green Tint
         borderColor: '#34C759',
     },
     activeTabTransfer: {
-        backgroundColor: '#FF9500', // Orange for Transfer
+        backgroundColor: 'rgba(255, 149, 0, 0.2)', // Orange Tint
         borderColor: '#FF9500',
     },
     tabText: {
         color: '#888',
         fontWeight: 'bold',
+        fontSize: 12
     },
     activeTabText: {
         color: '#fff',
@@ -224,15 +241,17 @@ const styles = StyleSheet.create({
     },
     card: {
         backgroundColor: '#1C1C1E',
-        borderRadius: 12,
+        borderRadius: 16,
         padding: 20,
+    },
+    cardHeaderRow: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20
     },
     cardTitle: {
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 20,
-        textAlign: 'center',
+        marginLeft: 10
     },
     inputGroup: {
         marginBottom: 20,
@@ -240,18 +259,19 @@ const styles = StyleSheet.create({
     label: {
         color: '#888',
         fontSize: 12,
-        fontWeight: 'bold',
+        fontWeight: '700',
         marginBottom: 8,
     },
     scanBtn: {
-        backgroundColor: '#333',
+        backgroundColor: '#2C2C2E',
         height: 60,
-        borderRadius: 8,
+        borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
         borderColor: '#444',
         borderStyle: 'dashed',
+        flexDirection: 'row'
     },
     scanBtnText: {
         color: '#fff',
@@ -260,9 +280,12 @@ const styles = StyleSheet.create({
     productDisplay: {
         backgroundColor: '#2C2C2E',
         padding: 15,
-        borderRadius: 8,
+        borderRadius: 12,
         borderLeftWidth: 4,
         borderLeftColor: '#007AFF',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
     },
     productName: {
         color: '#fff',
@@ -270,21 +293,17 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     productCode: {
-        color: '#ccc',
+        color: '#aaa',
         marginTop: 5,
+        fontSize: 13
     },
     clearBtn: {
-        marginTop: 10,
-        alignItems: 'flex-end',
-    },
-    clearText: {
-        color: '#FF3B30',
-        fontSize: 12,
+        padding: 5,
     },
     input: {
         backgroundColor: '#2C2C2E',
         height: 50,
-        borderRadius: 8,
+        borderRadius: 12,
         paddingHorizontal: 15,
         color: '#fff',
         fontSize: 16,
@@ -299,6 +318,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 10,
+        flexDirection: 'row'
     },
     submitBtnTransfer: {
         backgroundColor: '#FF9500',

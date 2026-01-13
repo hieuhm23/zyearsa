@@ -6,14 +6,15 @@ import {
     TouchableOpacity,
     StyleSheet,
     Alert,
-    SafeAreaView,
     KeyboardAvoidingView,
     Platform,
     StatusBar,
-    Image
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const LoginScreen = ({ navigation }: any) => {
+    const insets = useSafeAreaInsets();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
@@ -22,16 +23,16 @@ const LoginScreen = ({ navigation }: any) => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" />
+        <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+            <StatusBar barStyle="dark-content" backgroundColor="#F5F7FA" />
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardView}
             >
                 <View style={styles.logoContainer}>
-                    {/* Medical Cross Icon Symbol */}
+                    {/* Medical Cross Icon Symbol - Replaced Emoji with Vector Icon */}
                     <View style={styles.logoIcon}>
-                        <Text style={{ fontSize: 50 }}>⚕️</Text>
+                        <MaterialCommunityIcons name="hospital-box" size={60} color="#0277BD" />
                     </View>
                     <Text style={styles.logoText}>ZYEA PHARMA</Text>
                     <Text style={styles.subLogoText}>Hệ thống bán lẻ thuốc chuẩn GPP</Text>
@@ -74,7 +75,7 @@ const LoginScreen = ({ navigation }: any) => {
                 </View>
 
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
     );
 };
 
@@ -100,6 +101,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 15,
+        shadowColor: '#0288D1',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 5,
     },
     logoText: {
         fontSize: 32,

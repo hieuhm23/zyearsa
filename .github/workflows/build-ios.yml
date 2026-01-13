@@ -8,7 +8,7 @@ on:
 jobs:
   build-ios:
     name: Build Unsigned IPA
-    runs-on: macos-latest  # Chạy trên máy Mac của GitHub
+    runs-on: macos-latest
     
     steps:
       - name: 🏗 Checkout repository
@@ -30,10 +30,12 @@ jobs:
           eas-version: latest
           token: ${{ secrets.TOKEN }}
 
-      - name: 🔨 Prebuild iOS (Tạo code Native)
+      - name: 🔨 Prebuild iOS
         run: npx expo prebuild --platform ios --clean
         env:
           EAS_NO_VCS: 1
+          # Thêm Project ID vào đây cho chắc chắn (lấy từ app.json của bạn)
+          EAS_PROJECT_ID: 22440a9f-50a7-4aca-9af3-6a3a1c453321
 
       - name: 📦 Install CocoaPods
         run: |
@@ -49,19 +51,6 @@ jobs:
           echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
           echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
           echo "Found: $WORKSPACE / $SCHEME"
-
-      - name: 🔧 Fix Signing Issues (Force Manual)
-        run: |
-          # Tìm file project (thường nằm trong folder .xcodeproj)
-          PROJECT_FILE=$(find ios -name "project.pbxproj" | head -1)
-          echo "Patching project file: $PROJECT_FILE"
-          
-          # Tắt Code Sign Style Automatic -> Manual
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PROJECT_FILE" || true
-          
-          # Xóa dòng Development Team nếu có
-          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/g' "$PROJECT_FILE" || true
-
 
       - name: 🚀 Build iOS App (No Sign)
         run: |
@@ -86,6 +75,8 @@ jobs:
             echo "Error: No .app file found!"
             exit 1
           fi
+          
+          echo "Found app at: $APP_PATH"
           
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/

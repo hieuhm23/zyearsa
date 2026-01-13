@@ -20,17 +20,30 @@ jobs:
           node-version: 18.x
           cache: npm
 
-      - name: 🏗 Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.TOKE }}
+      # Bỏ Setup EAS của Expo action để tự cài tay cho chắc
+      # - name: 🏗 Setup EAS
+      #   uses: expo/expo-github-action@v8
+      #   with:
+      #     eas-version: latest
+      #     token: ${{ secrets.TOKE }}
 
-      - name: 📦 Install dependencies
-        run: npm install
+      - name: 📦 Install dependencies & EAS CLI
+        run: |
+          npm install
+          npm install -g eas-cli
+
+      - name: �️ Check Token (Debug)
+        env:
+          MY_TOKEN: ${{ secrets.TOKEN }}
+        run: |
+          if [ -z "$MY_TOKEN" ]; then
+            echo "❌ LỖI RỒI: Không tìm thấy Secret TOKEN. Bạn nhớ thêm vào mục 'Secrets' nhé!"
+            exit 1
+          else
+            echo "✅ Đã tìm thấy Secret TOKEN (Độ dài: ${#MY_TOKEN} ký tự)."
+          fi
 
       - name: 🚀 Build iOS App
-        # Bỏ --no-wait để chờ build xong và lấy link
         env:
-          EXPO_TOKEN: ${{ secrets.TOKE }}
+          EXPO_TOKEN: ${{ secrets.TOKEN }}
         run: eas build --platform ios --profile production --non-interactive

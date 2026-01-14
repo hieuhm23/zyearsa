@@ -30,9 +30,14 @@ jobs:
       - name: 📦 Install dependencies
         run: npm install
 
-      - name: 📦 Bundle JS Code (Pre-check)
+      - name: � Prebuild iOS
+        run: npx expo prebuild --platform ios --clean
+        env:
+          EAS_NO_VCS: 1
+          EAS_PROJECT_ID: 22440a9f-50a7-4aca-9af3-6a3a1c453321
+
+      - name: 📦 Bundle JS Code (Manual)
         run: |
-          mkdir -p ios/main.jsbundle
           npx react-native bundle \
             --entry-file index.ts \
             --platform ios \
@@ -40,12 +45,6 @@ jobs:
             --bundle-output ios/main.jsbundle \
             --assets-dest ios \
             --reset-cache
-
-      - name: 🔨 Prebuild iOS
-        run: npx expo prebuild --platform ios --clean
-        env:
-          EAS_NO_VCS: 1
-          EAS_PROJECT_ID: 22440a9f-50a7-4aca-9af3-6a3a1c453321
 
       - name: 📦 Install CocoaPods
         run: |

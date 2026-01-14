@@ -98,91 +98,92 @@ const HomeScreen = ({ navigation }: any) => {
                         </TouchableOpacity>
 
                         {expandedSections['sales'] && (
-                            { renderGridItem('Giỏ hàng', 'cart-outline', '#0288D1', 'Pos')}
-                        {renderGridItem('Cắt liều', 'content-cut', '#F57C00')}
-                        {renderGridItem('Trả hàng', 'keyboard-return', '#D32F2F')}
-                        {/* {renderGridItem('Tư vấn VX', 'needle', '#0097A7')} */}
-                        {/* {renderGridItem('DS đơn VX', 'clipboard-list-outline', '#1976D2')} */}
-                    </View>
+                            <View style={styles.gridContainer}>
+                                {renderGridItem('Giỏ hàng', 'cart-outline', '#0288D1', 'Pos')}
+                                {renderGridItem('Cắt liều', 'content-cut', '#F57C00')}
+                                {renderGridItem('Trả hàng', 'keyboard-return', '#D32F2F')}
+                                {/* {renderGridItem('Tư vấn VX', 'needle', '#0097A7')} */}
+                                {/* {renderGridItem('DS đơn VX', 'clipboard-list-outline', '#1976D2')} */}
+                            </View>
                         )}
-            </View>
-
-            {/* Section: Nhập - Xuất */}
-            <View style={styles.cardSection}>
-                <TouchableOpacity style={styles.cardHeader} onPress={() => toggleSection('warehouse')}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <MaterialCommunityIcons name="package-variant-closed" size={18} color="#795548" style={{ marginRight: 6 }} />
-                        <Text style={styles.cardTitle}>Nhập - xuất hàng</Text>
                     </View>
-                    <Ionicons name={expandedSections['warehouse'] ? "chevron-up" : "chevron-down"} size={20} color="#999" />
-                </TouchableOpacity>
 
-                {expandedSections['warehouse'] && (
-                    <View style={styles.gridContainer}>
-                        {renderGridItem('Xuất SD', 'export', '#FBC02D', 'Warehouse')}
-                        {renderGridItem('Báo cáo', 'chart-bar', '#388E3C', 'Report')}
+                    {/* Section: Nhập - Xuất */}
+                    <View style={styles.cardSection}>
+                        <TouchableOpacity style={styles.cardHeader} onPress={() => toggleSection('warehouse')}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <MaterialCommunityIcons name="package-variant-closed" size={18} color="#795548" style={{ marginRight: 6 }} />
+                                <Text style={styles.cardTitle}>Nhập - xuất hàng</Text>
+                            </View>
+                            <Ionicons name={expandedSections['warehouse'] ? "chevron-up" : "chevron-down"} size={20} color="#999" />
+                        </TouchableOpacity>
+
+                        {expandedSections['warehouse'] && (
+                            <View style={styles.gridContainer}>
+                                {renderGridItem('Xuất SD', 'export', '#FBC02D', 'Warehouse')}
+                                {renderGridItem('Báo cáo', 'chart-bar', '#388E3C', 'Report')}
+                            </View>
+                        )}
                     </View>
-                )}
-            </View>
 
-            {/* Section: Vận hành */}
-            <View style={styles.cardSection}>
-                <TouchableOpacity style={styles.cardHeader} onPress={() => toggleSection('operation')}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <MaterialCommunityIcons name="cog" size={18} color="#607D8B" style={{ marginRight: 6 }} />
-                        <Text style={styles.cardTitle}>Vận hành shop</Text>
+                    {/* Section: Vận hành */}
+                    <View style={styles.cardSection}>
+                        <TouchableOpacity style={styles.cardHeader} onPress={() => toggleSection('operation')}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <MaterialCommunityIcons name="cog" size={18} color="#607D8B" style={{ marginRight: 6 }} />
+                                <Text style={styles.cardTitle}>Vận hành shop</Text>
+                            </View>
+                            <Ionicons name={expandedSections['operation'] ? "chevron-up" : "chevron-down"} size={20} color="#999" />
+                        </TouchableOpacity>
+                        {expandedSections['operation'] && (
+                            <View style={styles.gridContainer}>
+                                {renderGridItem('Chấm công', 'calendar-clock', '#5C6BC0')}
+                                {renderGridItem('KPI', 'target', '#EC407A')}
+                            </View>
+                        )}
                     </View>
-                    <Ionicons name={expandedSections['operation'] ? "chevron-up" : "chevron-down"} size={20} color="#999" />
-                </TouchableOpacity>
-                {expandedSections['operation'] && (
-                    <View style={styles.gridContainer}>
-                        {renderGridItem('Chấm công', 'calendar-clock', '#5C6BC0')}
-                        {renderGridItem('KPI', 'target', '#EC407A')}
+
+                    {/* Footer Image */}
+                    <View style={styles.footerBanner}>
+                        <Text style={{ color: '#999', fontSize: 12, textAlign: 'center' }}>Zyea Pharma System v2.0</Text>
                     </View>
-                )}
-            </View>
 
-            {/* Footer Image */}
-            <View style={styles.footerBanner}>
-                <Text style={{ color: '#999', fontSize: 12, textAlign: 'center' }}>Zyea Pharma System v2.0</Text>
-            </View>
-
-        </ScrollView>
+                </ScrollView>
             </View >
 
-    {/* 3. BOTTOM TAB NAVIGATION */ }
-{/* Dynamic paddingBottom based on Safe Area Insets */ }
-<View style={[styles.bottomTab, { paddingBottom: Math.max(insets.bottom, 10), height: 60 + Math.max(insets.bottom, 10) }]}>
-    <TouchableOpacity style={styles.tabItemActive}>
-        <Ionicons name="home" size={24} color="#0D47A1" />
-        <Text style={styles.tabLabelActive}>Trang chủ</Text>
-    </TouchableOpacity>
+            {/* 3. BOTTOM TAB NAVIGATION */}
+            {/* Dynamic paddingBottom based on Safe Area Insets */}
+            <View style={[styles.bottomTab, { paddingBottom: Math.max(insets.bottom, 10), height: 60 + Math.max(insets.bottom, 10) }]}>
+                <TouchableOpacity style={styles.tabItemActive}>
+                    <Ionicons name="home" size={24} color="#0D47A1" />
+                    <Text style={styles.tabLabelActive}>Trang chủ</Text>
+                </TouchableOpacity>
 
-    <TouchableOpacity style={styles.tabItem}>
-        <Ionicons name="document-text-outline" size={24} color="#999" />
-        <Text style={styles.tabLabel}>Đơn hàng</Text>
-    </TouchableOpacity>
+                <TouchableOpacity style={styles.tabItem}>
+                    <Ionicons name="document-text-outline" size={24} color="#999" />
+                    <Text style={styles.tabLabel}>Đơn hàng</Text>
+                </TouchableOpacity>
 
-    {/* Center SCAN Button */}
-    <TouchableOpacity style={styles.scanWrapper} onPress={() => navigation.navigate('Pos')}>
-        <View style={styles.scanBtn}>
-            <Ionicons name="scan" size={28} color="#fff" />
-        </View>
-    </TouchableOpacity>
+                {/* Center SCAN Button */}
+                <TouchableOpacity style={styles.scanWrapper} onPress={() => navigation.navigate('Pos')}>
+                    <View style={styles.scanBtn}>
+                        <Ionicons name="scan" size={28} color="#fff" />
+                    </View>
+                </TouchableOpacity>
 
-    <TouchableOpacity style={styles.tabItem}>
-        <View>
-            <Ionicons name="notifications-outline" size={24} color="#999" />
-            <View style={styles.tabBadge}><Text style={styles.badgeText}>3</Text></View>
-        </View>
-        <Text style={styles.tabLabel}>Thông báo</Text>
-    </TouchableOpacity>
+                <TouchableOpacity style={styles.tabItem}>
+                    <View>
+                        <Ionicons name="notifications-outline" size={24} color="#999" />
+                        <View style={styles.tabBadge}><Text style={styles.badgeText}>3</Text></View>
+                    </View>
+                    <Text style={styles.tabLabel}>Thông báo</Text>
+                </TouchableOpacity>
 
-    <TouchableOpacity style={styles.tabItem}>
-        <Ionicons name="chatbubble-ellipses-outline" size={24} color="#999" />
-        <Text style={styles.tabLabel}>Hỗ trợ</Text>
-    </TouchableOpacity>
-</View>
+                <TouchableOpacity style={styles.tabItem}>
+                    <Ionicons name="chatbubble-ellipses-outline" size={24} color="#999" />
+                    <Text style={styles.tabLabel}>Hỗ trợ</Text>
+                </TouchableOpacity>
+            </View>
 
         </View >
     );

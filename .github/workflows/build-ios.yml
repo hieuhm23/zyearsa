@@ -30,37 +30,24 @@ jobs:
       - name: 📦 Install dependencies
         run: npm install
 
-      - name: � Prebuild iOS
+      - name: 🔨 Prebuild iOS
         run: npx expo prebuild --platform ios --clean
         env:
           EAS_NO_VCS: 1
           EAS_PROJECT_ID: 22440a9f-50a7-4aca-9af3-6a3a1c453321
 
-      - name: 📦 Bundle JS Code (Manual)
-        run: |
-          npx react-native bundle \
-            --entry-file index.ts \
-            --platform ios \
-            --dev false \
-            --bundle-output ios/main.jsbundle \
-            --assets-dest ios \
-            --reset-cache
-
       - name: 📦 Install CocoaPods
         run: |
           cd ios
-          # Tắt script Bundle của React Native trong Pods để dùng file có sẵn
-          export SKIP_BUNDLING=1 
           pod install --repo-update
 
       - name: 🔧 Force Remove Signing (Aggressive)
         run: |
           cd ios
-          # Xóa sạch các thiết lập Signing
+          # Xóa sạch các thiết lập Signing (Giữ lại Entitlements để tránh lỗi permission)
           find . -name "project.pbxproj" -exec sed -i '' '/CODE_SIGN_IDENTITY/d' {} +
           find . -name "project.pbxproj" -exec sed -i '' '/DEVELOPMENT_TEAM/d' {} +
           find . -name "project.pbxproj" -exec sed -i '' '/PROVISIONING_PROFILE_SPECIFIER/d' {} +
-          find . -name "project.pbxproj" -exec sed -i '' '/CODE_SIGN_ENTITLEMENTS/d' {} +
           
           # Tắt bắt buộc Signing
           find . -name "project.pbxproj" -exec sed -i '' 's/CODE_SIGNING_REQUIRED = YES/CODE_SIGNING_REQUIRED = NO/g' {} +
@@ -78,8 +65,10 @@ jobs:
       - name: 🚀 Build iOS App (No Sign)
         run: |
           cd ios
-          # Tăng log level để debug nếu lỗi
-          export SKIP_BUNDLING=1
+          # Tăng RAM cho Node và Tắt SourceMap để tránh lỗi OOM
+          export NODE_OPTIONS="--max-old-space-size=8192"
+          export GENERATE_SOURCEMAP=false
+          
           xcodebuild \
             -workspace "${{ steps.project.outputs.workspace }}" \
             -scheme "${{ steps.project.outputs.scheme }}" \
@@ -101,12 +90,6 @@ jobs:
             echo "❌ Error: Build failed (No .app found)."
             exit 1
           fi
-
-          # 🚨 FIX QUAN TRỌNG: Copy thủ công Bundle và Assets vào trong App
-          # Vì SKIP_BUNDLING=1 nên Xcode không tự làm việc này
-          echo "📂 Copying JS Bundle and Assets to $APP_PATH..."
-          cp ios/main.jsbundle "$APP_PATH/main.jsbundle"
-          cp -R ios/assets "$APP_PATH/"
           
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/

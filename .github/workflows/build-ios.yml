@@ -30,12 +30,16 @@ jobs:
       - name: 📦 Install dependencies
         run: npm install
 
-      - name: 🏗 Setup Expo (Clean)
-        uses: expo/expo-github-action@v8
-        with:
-          expo-version: latest
-          eas-version: latest
-          token: ${{ secrets.TOKEN }}
+      - name: 📦 Bundle JS Code (Pre-check)
+        run: |
+          mkdir -p ios/main.jsbundle
+          npx react-native bundle \
+            --entry-file index.ts \
+            --platform ios \
+            --dev false \
+            --bundle-output ios/main.jsbundle \
+            --assets-dest ios \
+            --reset-cache
 
       - name: 🔨 Prebuild iOS
         run: npx expo prebuild --platform ios --clean
@@ -46,6 +50,8 @@ jobs:
       - name: 📦 Install CocoaPods
         run: |
           cd ios
+          # Tắt script Bundle của React Native trong Pods để dùng file có sẵn
+          export SKIP_BUNDLING=1 
           pod install --repo-update
 
       - name: 🔧 Force Remove Signing (Aggressive)
@@ -74,6 +80,7 @@ jobs:
         run: |
           cd ios
           # Tăng log level để debug nếu lỗi
+          export SKIP_BUNDLING=1
           xcodebuild \
             -workspace "${{ steps.project.outputs.workspace }}" \
             -scheme "${{ steps.project.outputs.scheme }}" \

@@ -126,9 +126,9 @@ const WarehouseScreen = ({ navigation }: any) => {
 
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
-            <StatusBar barStyle="light-content" backgroundColor="#212121" />
+            <StatusBar barStyle="light-content" backgroundColor="#0D47A1" />
 
-            {/* Header */}
+            {/* Header - Đồng bộ với các màn hình khác */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 5 }}>
                     <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -140,7 +140,7 @@ const WarehouseScreen = ({ navigation }: any) => {
             </View>
 
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-                <ScrollView contentContainerStyle={{ padding: 15, paddingBottom: 50 }}>
+                <ScrollView contentContainerStyle={{ padding: 15, paddingBottom: 50 }} style={styles.scrollContent}>
 
                     {/* 1. CHỌN KHO */}
                     <Text style={styles.sectionLabel}>CHỌN KHO NHẬP:</Text>
@@ -318,39 +318,40 @@ const WarehouseScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#121212' },
+    container: { flex: 1, backgroundColor: '#0D47A1' },
     header: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        padding: 15, borderBottomWidth: 1, borderColor: '#333', backgroundColor: '#1E1E1E'
+        padding: 15, backgroundColor: '#0D47A1'
     },
     headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    scrollContent: { backgroundColor: '#F5F5F5', borderTopLeftRadius: 20, borderTopRightRadius: 20 },
 
-    sectionLabel: { color: '#888', fontSize: 12, marginBottom: 8, fontWeight: 'bold' },
+    sectionLabel: { color: '#666', fontSize: 12, marginBottom: 8, fontWeight: 'bold' },
     warehouseList: { flexDirection: 'row', gap: 10, marginBottom: 20 },
     warehouseChip: {
         flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 12,
-        borderRadius: 20, borderWidth: 1, borderColor: '#444', backgroundColor: '#1E1E1E', gap: 5
+        borderRadius: 20, borderWidth: 1, borderColor: '#ddd', backgroundColor: '#fff', gap: 5
     },
-    warehouseText: { color: '#888', fontSize: 12 },
+    warehouseText: { color: '#666', fontSize: 12 },
 
     scanSection: { flexDirection: 'row', gap: 15, marginBottom: 15 },
     imageBox: {
-        width: 80, height: 80, backgroundColor: '#252525', borderRadius: 8,
-        borderWidth: 1, borderColor: '#444', borderStyle: 'dashed',
+        width: 80, height: 80, backgroundColor: '#fff', borderRadius: 8,
+        borderWidth: 1, borderColor: '#ddd', borderStyle: 'dashed',
         justifyContent: 'center', alignItems: 'center', overflow: 'hidden'
     },
     imagePreview: { width: '100%', height: '100%', resizeMode: 'cover' },
 
-    label: { color: '#aaa', marginBottom: 6, fontSize: 12 },
+    label: { color: '#666', marginBottom: 6, fontSize: 12 },
     input: {
-        backgroundColor: '#1E1E1E', color: '#fff', borderRadius: 8, padding: 10,
-        borderWidth: 1, borderColor: '#444', fontSize: 15
+        backgroundColor: '#fff', color: '#333', borderRadius: 8, padding: 12,
+        borderWidth: 1, borderColor: '#ddd', fontSize: 15
     },
     scanBtn: {
-        backgroundColor: '#FFD700', borderRadius: 8, width: 50, justifyContent: 'center', alignItems: 'center'
+        backgroundColor: '#FFB300', borderRadius: 8, width: 50, justifyContent: 'center', alignItems: 'center'
     },
 
-    card: { backgroundColor: '#181818', padding: 15, borderRadius: 10, marginBottom: 10 },
+    card: { backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 10, elevation: 2, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4 },
     inputGroup: { marginBottom: 10 },
 
     submitBtn: {
@@ -361,12 +362,12 @@ const styles = StyleSheet.create({
     submitBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 
     historyItem: {
-        flexDirection: 'row', padding: 10, backgroundColor: '#1E1E1E', borderRadius: 8, marginBottom: 8, alignItems: 'center',
-        borderLeftWidth: 3, borderColor: '#666'
+        flexDirection: 'row', padding: 12, backgroundColor: '#fff', borderRadius: 10, marginBottom: 8, alignItems: 'center',
+        borderLeftWidth: 4, borderColor: '#0288D1', elevation: 2
     },
-    historyImg: { width: 35, height: 35, borderRadius: 4, backgroundColor: '#333' },
-    historyName: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
-    historySub: { color: '#888', fontSize: 12, marginTop: 2 }
+    historyImg: { width: 40, height: 40, borderRadius: 6, backgroundColor: '#f0f0f0' },
+    historyName: { color: '#333', fontWeight: 'bold', fontSize: 14 },
+    historySub: { color: '#666', fontSize: 12, marginTop: 2 }
 });
 
 export default WarehouseScreen;

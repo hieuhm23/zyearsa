@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import {
-    View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, Modal, StatusBar, Image, ScrollView, KeyboardAvoidingView, Platform
+    View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert, Modal, StatusBar, Image, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback
 } from 'react-native';
 import { PRODUCTS } from '../data/mockData';
 import QRScanner from '../components/QRScanner';
@@ -24,7 +24,16 @@ const PosScreen = ({ navigation }: any) => {
 
     // --- CHECKOUT STATES ---
     const [checkoutVisible, setCheckoutVisible] = useState(false);
+    const [checkoutStep, setCheckoutStep] = useState<'review' | 'customer' | 'payment'>('review');
     const [discountCode, setDiscountCode] = useState('');
+
+    // Customer Info
+    const [customerPhone, setCustomerPhone] = useState('');
+    const [customerName, setCustomerName] = useState('');
+
+    // Payment Method
+    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer' | 'momo'>('cash');
+    const [customerPaid, setCustomerPaid] = useState('');
 
     // --- LOGIC: SEARCH ---
     const searchResults = useMemo(() => {
@@ -101,10 +110,43 @@ const PosScreen = ({ navigation }: any) => {
             Alert.alert('Giỏ hàng trống', 'Vui lòng thêm sản phẩm trước khi thanh toán.');
             return;
         }
-        Alert.alert('Xác nhận', `Tổng tiền: ${totalAmount.toLocaleString()}đ\nTiếp tục thanh toán?`, [
-            { text: 'Hủy', style: 'cancel' },
-            { text: 'Tiếp tục', onPress: () => { setCart([]); Alert.alert('Thành công!'); } }
-        ]);
+        setCheckoutStep('review');
+        setCheckoutVisible(true);
+    };
+
+    const handleNextStep = () => {
+        if (checkoutStep === 'review') {
+            setCheckoutStep('customer');
+        } else if (checkoutStep === 'customer') {
+            setCheckoutStep('payment');
+        }
+    };
+
+    const handlePrevStep = () => {
+        if (checkoutStep === 'payment') {
+            setCheckoutStep('customer');
+        } else if (checkoutStep === 'customer') {
+            setCheckoutStep('review');
+        } else {
+            setCheckoutVisible(false);
+        }
+    };
+
+    const handleCompletePayment = () => {
+        // TODO: Deduct stock, save order to database
+        Alert.alert(
+            '🎉 Thanh toán thành công!',
+            `Tổng tiền: ${totalAmount.toLocaleString()}đ\nPhương thức: ${paymentMethod === 'cash' ? 'Tiền mặt' : paymentMethod === 'transfer' ? 'Chuyển khoản' : 'Momo'}`,
+            [{
+                text: 'Đóng', onPress: () => {
+                    setCart([]);
+                    setCheckoutVisible(false);
+                    setCustomerPhone('');
+                    setCustomerName('');
+                    setCustomerPaid('');
+                }
+            }]
+        );
     };
 
     // --- HELPER: Get Tag Color ---
@@ -184,187 +226,328 @@ const PosScreen = ({ navigation }: any) => {
     };
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top }]}>
-            <StatusBar barStyle="light-content" backgroundColor="#0D47A1" />
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            <View style={[styles.container, { paddingTop: insets.top }]}>
+                <StatusBar barStyle="light-content" backgroundColor="#0D47A1" />
 
-            {/* HEADER */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
-                    <Ionicons name="arrow-back" size={24} color="#fff" />
-                </TouchableOpacity>
-                <View style={styles.searchBox}>
-                    <Ionicons name="search" size={20} color="#999" style={{ marginLeft: 10 }} />
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Nhập tên, barcode ho..."
-                        placeholderTextColor="#999"
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                    />
-                </View>
-                <TouchableOpacity style={styles.iconBtn}>
-                    <Ionicons name="ellipsis-horizontal" size={24} color="#fff" />
-                </TouchableOpacity>
-            </View>
-
-            {/* SEARCH RESULTS OVERLAY */}
-            {searchResults.length > 0 && (
-                <View style={styles.searchResultContainer}>
-                    <FlatList
-                        data={searchResults}
-                        keyExtractor={item => item.id}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity style={styles.resultItem} onPress={() => openProductModal(item)}>
-                                <Image source={{ uri: item.image }} style={styles.resultImage} />
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.resultName}>{item.name}</Text>
-                                    <Text style={{ fontSize: 13, color: '#2E7D32' }}>Tồn: {item.stock}</Text>
-                                </View>
-                                <Text style={styles.resultPrice}>{item.units[0].price.toLocaleString()}đ</Text>
-                            </TouchableOpacity>
-                        )}
-                    />
-                </View>
-            )}
-
-            {/* TAB BAR */}
-            <View style={styles.tabBar}>
-                <Text style={styles.tabTitle}>Sản phẩm ({cart.length})</Text>
-                <View style={styles.tabButtons}>
-                    <TouchableOpacity
-                        style={[styles.tabBtn, activeTab === 'project' && styles.tabBtnActive]}
-                        onPress={() => setActiveTab('project')}
-                    >
-                        <View style={[styles.checkbox, activeTab === 'project' && styles.checkboxActive]} />
-                        <Text style={styles.tabBtnText}>Dự án</Text>
+                {/* HEADER */}
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
+                        <Ionicons name="arrow-back" size={24} color="#fff" />
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tabBtn, activeTab === 'counter' && styles.tabBtnActive]}
-                        onPress={() => setActiveTab('counter')}
-                    >
-                        <Text style={[styles.tabBtnText, activeTab === 'counter' && { color: '#0288D1' }]}>Đơn bán tại quầy</Text>
-                        <Ionicons name="chevron-down" size={16} color={activeTab === 'counter' ? '#0288D1' : '#666'} />
-                    </TouchableOpacity>
-                </View>
-            </View>
-
-            {/* MAIN CONTENT */}
-            <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 220 }}>
-                {cart.length === 0 ? (
-                    <View style={styles.emptyState}>
-                        <MaterialCommunityIcons name="cart-off" size={60} color="#ccc" />
-                        <Text style={styles.emptyText}>Chưa có sản phẩm nào</Text>
-                        <Text style={styles.emptyHint}>Quét mã vạch hoặc tìm kiếm để thêm</Text>
+                    <View style={styles.searchBox}>
+                        <Ionicons name="search" size={20} color="#999" style={{ marginLeft: 10 }} />
+                        <TextInput
+                            style={styles.searchInput}
+                            placeholder="Nhập tên, barcode ho..."
+                            placeholderTextColor="#999"
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                        />
                     </View>
-                ) : (
-                    cart.map((item, index) => (
-                        <View key={index}>{renderCartItem({ item, index })}</View>
-                    ))
-                )}
-            </ScrollView>
-
-            {/* FLOATING SCAN BUTTON */}
-            <TouchableOpacity style={[styles.fabScan, { bottom: 240 + insets.bottom }]} onPress={() => setShowScanner(true)}>
-                <MaterialCommunityIcons name="qrcode-scan" size={28} color="#fff" />
-            </TouchableOpacity>
-
-            {/* BOTTOM PANEL */}
-            <View style={[styles.bottomPanel, { paddingBottom: insets.bottom + 10 }]}>
-                {/* Quick Actions */}
-                <View style={styles.quickActions}>
-                    <TouchableOpacity style={styles.quickBtn}>
-                        <Ionicons name="document-text-outline" size={16} color="#0288D1" />
-                        <Text style={styles.quickBtnText}>Đơn thuốc điện tử</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.quickBtn}>
-                        <MaterialCommunityIcons name="content-cut" size={16} color="#0288D1" />
-                        <Text style={styles.quickBtnText}>Cắt liều</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.quickBtn}>
-                        <MaterialCommunityIcons name="tag-edit-outline" size={16} color="#0288D1" />
-                        <Text style={styles.quickBtnText}>Điều chỉnh giá</Text>
+                    <TouchableOpacity style={styles.iconBtn}>
+                        <Ionicons name="ellipsis-horizontal" size={24} color="#fff" />
                     </TouchableOpacity>
                 </View>
 
-                {/* Discount Input */}
-                <View style={styles.discountRow}>
-                    <Ionicons name="ticket-outline" size={20} color="#999" />
-                    <TextInput
-                        style={styles.discountInput}
-                        placeholder="Nhập mã giảm giá"
-                        placeholderTextColor="#999"
-                        value={discountCode}
-                        onChangeText={setDiscountCode}
-                    />
-                </View>
-
-                {/* Summary */}
-                <View style={styles.summarySection}>
-                    <View style={styles.summaryRow}>
-                        <Text style={styles.summaryLabel}>Tiết kiệm</Text>
-                        <Text style={styles.summaryValue}>0đ</Text>
-                    </View>
-                    <View style={styles.summaryRow}>
-                        <Text style={styles.summaryLabel}>Tiền ship</Text>
-                        <Text style={styles.summaryValue}>0đ</Text>
-                    </View>
-                    <View style={styles.summaryRow}>
-                        <Text style={styles.summaryLabelBold}>Tạm tính</Text>
-                        <Text style={styles.summaryValueBold}>{totalAmount.toLocaleString()}đ</Text>
-                    </View>
-                </View>
-
-                {/* Checkout Button */}
-                <TouchableOpacity style={styles.checkoutBtn} onPress={handleCheckout}>
-                    <Text style={styles.checkoutBtnText}>Tiếp tục</Text>
-                </TouchableOpacity>
-
-                {/* Bonus Points */}
-                <Text style={styles.bonusText}>Nhận 300 điểm F-sell</Text>
-            </View>
-
-            {/* ADD PRODUCT MODAL */}
-            <Modal visible={productModalVisible} transparent animationType="fade">
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        {selectedProduct && <Image source={{ uri: selectedProduct.image }} style={styles.modalProductImage} resizeMode="contain" />}
-                        <Text style={styles.modalTitle}>{selectedProduct?.name}</Text>
-                        <Text style={{ color: '#666', marginBottom: 10 }}>Tồn kho: {selectedProduct?.stock}</Text>
-
-                        <View style={{ flexDirection: 'row', gap: 10, marginVertical: 15 }}>
-                            {selectedProduct?.units.map((u: any, idx: number) => (
-                                <TouchableOpacity
-                                    key={idx}
-                                    style={[styles.unitBadge, selectedUnit?.name === u.name && styles.unitBadgeActive]}
-                                    onPress={() => setSelectedUnit(u)}
-                                >
-                                    <Text style={{ color: selectedUnit?.name === u.name ? '#0288D1' : '#333' }}>{u.name}</Text>
-                                    <Text style={{ fontWeight: 'bold', color: selectedUnit?.name === u.name ? '#0288D1' : '#333' }}>{u.price.toLocaleString()}</Text>
+                {/* SEARCH RESULTS OVERLAY */}
+                {searchResults.length > 0 && (
+                    <View style={styles.searchResultContainer}>
+                        <FlatList
+                            data={searchResults}
+                            keyExtractor={item => item.id}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity style={styles.resultItem} onPress={() => openProductModal(item)}>
+                                    <Image source={{ uri: item.image }} style={styles.resultImage} />
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.resultName}>{item.name}</Text>
+                                        <Text style={{ fontSize: 13, color: '#2E7D32' }}>Tồn: {item.stock}</Text>
+                                    </View>
+                                    <Text style={styles.resultPrice}>{item.units[0].price.toLocaleString()}đ</Text>
                                 </TouchableOpacity>
-                            ))}
-                        </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20, marginBottom: 20 }}>
-                            <TouchableOpacity onPress={() => setQuantity(q => Math.max(1, q - 1))} style={styles.modalQtyBtn}><Ionicons name="remove" size={24} color="#333" /></TouchableOpacity>
-                            <Text style={{ fontSize: 24, fontWeight: 'bold', width: 50, textAlign: 'center' }}>{quantity}</Text>
-                            <TouchableOpacity onPress={() => setQuantity(q => q + 1)} style={styles.modalQtyBtn}><Ionicons name="add" size={24} color="#333" /></TouchableOpacity>
-                        </View>
-                        <TouchableOpacity style={styles.confirmBtn} onPress={confirmAddToCart}>
-                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Thêm vào đơn - {(selectedUnit?.price * quantity)?.toLocaleString()}đ</Text>
+                            )}
+                        />
+                    </View>
+                )}
+
+                {/* TAB BAR */}
+                <View style={styles.tabBar}>
+                    <Text style={styles.tabTitle}>Sản phẩm ({cart.length})</Text>
+                    <View style={styles.tabButtons}>
+                        <TouchableOpacity
+                            style={[styles.tabBtn, activeTab === 'project' && styles.tabBtnActive]}
+                            onPress={() => setActiveTab('project')}
+                        >
+                            <View style={[styles.checkbox, activeTab === 'project' && styles.checkboxActive]} />
+                            <Text style={styles.tabBtnText}>Dự án</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.cancelBtn} onPress={() => setProductModalVisible(false)}>
-                            <Text style={{ color: '#666' }}>Đóng</Text>
+                        <TouchableOpacity
+                            style={[styles.tabBtn, activeTab === 'counter' && styles.tabBtnActive]}
+                            onPress={() => setActiveTab('counter')}
+                        >
+                            <Text style={[styles.tabBtnText, activeTab === 'counter' && { color: '#0288D1' }]}>Đơn bán tại quầy</Text>
+                            <Ionicons name="chevron-down" size={16} color={activeTab === 'counter' ? '#0288D1' : '#666'} />
                         </TouchableOpacity>
                     </View>
                 </View>
-            </Modal>
 
-            <QRScanner visible={showScanner} onClose={() => setShowScanner(false)} onScan={handleScan} />
-        </View>
+                {/* MAIN CONTENT */}
+                <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 220 }}>
+                    {cart.length === 0 ? (
+                        <View style={styles.emptyState}>
+                            <MaterialCommunityIcons name="cart-off" size={60} color="#ccc" />
+                            <Text style={styles.emptyText}>Chưa có sản phẩm nào</Text>
+                            <Text style={styles.emptyHint}>Quét mã vạch hoặc tìm kiếm để thêm</Text>
+                        </View>
+                    ) : (
+                        cart.map((item, index) => (
+                            <View key={index}>{renderCartItem({ item, index })}</View>
+                        ))
+                    )}
+                </ScrollView>
+
+                {/* FLOATING SCAN BUTTON */}
+                <TouchableOpacity style={[styles.fabScan, { bottom: 240 + insets.bottom }]} onPress={() => setShowScanner(true)}>
+                    <MaterialCommunityIcons name="qrcode-scan" size={28} color="#fff" />
+                </TouchableOpacity>
+
+                {/* BOTTOM PANEL */}
+                <View style={[styles.bottomPanel, { paddingBottom: insets.bottom + 10 }]}>
+                    {/* Quick Actions - Always visible */}
+                    <View style={styles.quickActions}>
+                        <TouchableOpacity style={styles.quickBtn}>
+                            <Ionicons name="document-text-outline" size={16} color="#0288D1" />
+                            <Text style={styles.quickBtnText}>Đơn thuốc điện tử</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.quickBtn}>
+                            <MaterialCommunityIcons name="content-cut" size={16} color="#0288D1" />
+                            <Text style={styles.quickBtnText}>Cắt liều</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.quickBtn}>
+                            <MaterialCommunityIcons name="tag-text-outline" size={16} color="#0288D1" />
+                            <Text style={styles.quickBtnText}>Điều chỉnh giá</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Only show when cart has items */}
+                    {cart.length > 0 && (
+                        <>
+                            {/* Discount Input */}
+                            <View style={styles.discountRow}>
+                                <Ionicons name="ticket-outline" size={20} color="#999" />
+                                <TextInput
+                                    style={styles.discountInput}
+                                    placeholder="Nhập mã giảm giá"
+                                    placeholderTextColor="#999"
+                                    value={discountCode}
+                                    onChangeText={setDiscountCode}
+                                />
+                            </View>
+
+                            {/* Summary */}
+                            <View style={styles.summarySection}>
+                                <View style={styles.summaryRow}>
+                                    <Text style={styles.summaryLabel}>Tiết kiệm</Text>
+                                    <Text style={styles.summaryValue}>0đ</Text>
+                                </View>
+                                <View style={styles.summaryRow}>
+                                    <Text style={styles.summaryLabel}>Tiền ship</Text>
+                                    <Text style={styles.summaryValue}>0đ</Text>
+                                </View>
+                                <View style={styles.summaryRow}>
+                                    <Text style={styles.summaryLabelBold}>Tạm tính</Text>
+                                    <Text style={styles.summaryValueBold}>{totalAmount.toLocaleString()}đ</Text>
+                                </View>
+                            </View>
+
+                            {/* Checkout Button */}
+                            <TouchableOpacity style={styles.checkoutBtn} onPress={handleCheckout}>
+                                <Text style={styles.checkoutBtnText}>Tiếp tục</Text>
+                            </TouchableOpacity>
+
+                            {/* Bonus Points */}
+                            <Text style={styles.bonusText}>Nhận 300 điểm F-sell</Text>
+                        </>
+                    )}
+                </View>
+
+                {/* ADD PRODUCT MODAL */}
+                <Modal visible={productModalVisible} transparent animationType="fade">
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            {selectedProduct && <Image source={{ uri: selectedProduct.image }} style={styles.modalProductImage} resizeMode="contain" />}
+                            <Text style={styles.modalTitle}>{selectedProduct?.name}</Text>
+                            <Text style={{ color: '#666', marginBottom: 10 }}>Tồn kho: {selectedProduct?.stock}</Text>
+
+                            <View style={{ flexDirection: 'row', gap: 10, marginVertical: 15 }}>
+                                {selectedProduct?.units.map((u: any, idx: number) => (
+                                    <TouchableOpacity
+                                        key={idx}
+                                        style={[styles.unitBadge, selectedUnit?.name === u.name && styles.unitBadgeActive]}
+                                        onPress={() => setSelectedUnit(u)}
+                                    >
+                                        <Text style={{ color: selectedUnit?.name === u.name ? '#0288D1' : '#333' }}>{u.name}</Text>
+                                        <Text style={{ fontWeight: 'bold', color: selectedUnit?.name === u.name ? '#0288D1' : '#333' }}>{u.price.toLocaleString()}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20, marginBottom: 20 }}>
+                                <TouchableOpacity onPress={() => setQuantity(q => Math.max(1, q - 1))} style={styles.modalQtyBtn}><Ionicons name="remove" size={24} color="#333" /></TouchableOpacity>
+                                <Text style={{ fontSize: 24, fontWeight: 'bold', width: 50, textAlign: 'center' }}>{quantity}</Text>
+                                <TouchableOpacity onPress={() => setQuantity(q => q + 1)} style={styles.modalQtyBtn}><Ionicons name="add" size={24} color="#333" /></TouchableOpacity>
+                            </View>
+                            <TouchableOpacity style={styles.confirmBtn} onPress={confirmAddToCart}>
+                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Thêm vào đơn - {(selectedUnit?.price * quantity)?.toLocaleString()}đ</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.cancelBtn} onPress={() => setProductModalVisible(false)}>
+                                <Text style={{ color: '#666' }}>Đóng</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+
+                {/* CHECKOUT MODAL - 3 STEPS */}
+                <Modal visible={checkoutVisible} transparent animationType="slide">
+                    <View style={styles.checkoutOverlay}>
+                        <View style={styles.checkoutContent}>
+                            {/* Header */}
+                            <View style={styles.checkoutHeader}>
+                                <TouchableOpacity onPress={handlePrevStep}>
+                                    <Ionicons name="arrow-back" size={24} color="#333" />
+                                </TouchableOpacity>
+                                <Text style={styles.checkoutTitle}>
+                                    {checkoutStep === 'review' ? 'Xác nhận đơn hàng' : checkoutStep === 'customer' ? 'Thông tin khách hàng' : 'Thanh toán'}
+                                </Text>
+                                <TouchableOpacity onPress={() => setCheckoutVisible(false)}>
+                                    <Ionicons name="close" size={24} color="#333" />
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Step Indicator */}
+                            <View style={styles.stepIndicator}>
+                                <View style={[styles.stepDot, checkoutStep === 'review' && styles.stepDotActive]} />
+                                <View style={styles.stepLine} />
+                                <View style={[styles.stepDot, checkoutStep === 'customer' && styles.stepDotActive]} />
+                                <View style={styles.stepLine} />
+                                <View style={[styles.stepDot, checkoutStep === 'payment' && styles.stepDotActive]} />
+                            </View>
+
+                            {/* STEP 1: REVIEW */}
+                            {checkoutStep === 'review' && (
+                                <ScrollView style={{ flex: 1, marginVertical: 15 }}>
+                                    {cart.map((item, idx) => (
+                                        <View key={idx} style={styles.checkoutItem}>
+                                            <Text style={{ flex: 1, fontWeight: 'bold' }}>{item.name}</Text>
+                                            <Text style={{ color: '#666' }}>{item.quantity} {item.unitName}</Text>
+                                            <Text style={{ fontWeight: 'bold', color: '#D32F2F', marginLeft: 10 }}>{item.total.toLocaleString()}đ</Text>
+                                        </View>
+                                    ))}
+                                    <View style={{ borderTopWidth: 1, borderColor: '#eee', paddingTop: 15, marginTop: 10 }}>
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                            <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Tổng cộng:</Text>
+                                            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#D32F2F' }}>{totalAmount.toLocaleString()}đ</Text>
+                                        </View>
+                                    </View>
+                                </ScrollView>
+                            )}
+
+                            {/* STEP 2: CUSTOMER INFO */}
+                            {checkoutStep === 'customer' && (
+                                <View style={{ flex: 1, marginVertical: 15 }}>
+                                    <Text style={styles.inputLabel}>Số điện thoại</Text>
+                                    <TextInput
+                                        style={styles.checkoutInput}
+                                        placeholder="Nhập SĐT khách hàng..."
+                                        placeholderTextColor="#999"
+                                        keyboardType="phone-pad"
+                                        value={customerPhone}
+                                        onChangeText={setCustomerPhone}
+                                    />
+                                    <Text style={styles.inputLabel}>Tên khách hàng (tùy chọn)</Text>
+                                    <TextInput
+                                        style={styles.checkoutInput}
+                                        placeholder="Nhập tên..."
+                                        placeholderTextColor="#999"
+                                        value={customerName}
+                                        onChangeText={setCustomerName}
+                                    />
+                                </View>
+                            )}
+
+                            {/* STEP 3: PAYMENT */}
+                            {checkoutStep === 'payment' && (
+                                <View style={{ flex: 1, marginVertical: 15 }}>
+                                    <Text style={styles.inputLabel}>Phương thức thanh toán</Text>
+                                    <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
+                                        <TouchableOpacity
+                                            style={[styles.paymentOption, paymentMethod === 'cash' && styles.paymentOptionActive]}
+                                            onPress={() => setPaymentMethod('cash')}
+                                        >
+                                            <Ionicons name="cash-outline" size={24} color={paymentMethod === 'cash' ? '#0288D1' : '#666'} />
+                                            <Text style={paymentMethod === 'cash' ? { color: '#0288D1', fontWeight: 'bold' } : { color: '#666' }}>Tiền mặt</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={[styles.paymentOption, paymentMethod === 'transfer' && styles.paymentOptionActive]}
+                                            onPress={() => setPaymentMethod('transfer')}
+                                        >
+                                            <Ionicons name="card-outline" size={24} color={paymentMethod === 'transfer' ? '#0288D1' : '#666'} />
+                                            <Text style={paymentMethod === 'transfer' ? { color: '#0288D1', fontWeight: 'bold' } : { color: '#666' }}>Chuyển khoản</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={[styles.paymentOption, paymentMethod === 'momo' && styles.paymentOptionActive]}
+                                            onPress={() => setPaymentMethod('momo')}
+                                        >
+                                            <MaterialCommunityIcons name="wallet-outline" size={24} color={paymentMethod === 'momo' ? '#A50064' : '#666'} />
+                                            <Text style={paymentMethod === 'momo' ? { color: '#A50064', fontWeight: 'bold' } : { color: '#666' }}>Momo</Text>
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    <Text style={styles.inputLabel}>Tiền khách đưa</Text>
+                                    <TextInput
+                                        style={[styles.checkoutInput, { fontSize: 20, fontWeight: 'bold', color: '#2E7D32' }]}
+                                        placeholder="0"
+                                        placeholderTextColor="#999"
+                                        keyboardType="numeric"
+                                        value={customerPaid}
+                                        onChangeText={setCustomerPaid}
+                                    />
+
+                                    <View style={{ backgroundColor: '#E8F5E9', padding: 15, borderRadius: 10, marginTop: 15 }}>
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                                            <Text style={{ color: '#666' }}>Tổng tiền:</Text>
+                                            <Text style={{ fontWeight: 'bold' }}>{totalAmount.toLocaleString()}đ</Text>
+                                        </View>
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                            <Text style={{ color: '#2E7D32', fontWeight: 'bold' }}>Tiền thừa:</Text>
+                                            <Text style={{ fontWeight: 'bold', color: '#2E7D32', fontSize: 18 }}>
+                                                {Math.max(0, (parseInt(customerPaid) || 0) - totalAmount).toLocaleString()}đ
+                                            </Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            )}
+
+                            {/* Footer Button */}
+                            <TouchableOpacity
+                                style={styles.checkoutNextBtn}
+                                onPress={checkoutStep === 'payment' ? handleCompletePayment : handleNextStep}
+                            >
+                                <Text style={styles.checkoutNextBtnText}>
+                                    {checkoutStep === 'payment' ? 'Hoàn tất thanh toán' : 'Tiếp tục'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+
+                <QRScanner visible={showScanner} onClose={() => setShowScanner(false)} onScan={handleScan} />
+            </View>
+        </TouchableWithoutFeedback>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F5F5F5' },
+    container: { flex: 1, backgroundColor: '#0D47A1' },
     header: {
         backgroundColor: '#0D47A1',
         flexDirection: 'row',
@@ -401,7 +584,8 @@ const styles = StyleSheet.create({
     checkboxActive: { backgroundColor: '#0288D1', borderColor: '#0288D1' },
 
     // Content
-    content: { flex: 1, padding: 10 },
+    // Content
+    content: { flex: 1, padding: 10, backgroundColor: '#F5F5F5', borderTopLeftRadius: 20, borderTopRightRadius: 20 },
     emptyState: { alignItems: 'center', marginTop: 60 },
     emptyText: { fontSize: 16, color: '#999', marginTop: 15 },
     emptyHint: { fontSize: 13, color: '#bbb', marginTop: 5 },
@@ -503,6 +687,23 @@ const styles = StyleSheet.create({
     modalQtyBtn: { width: 50, height: 50, backgroundColor: '#F5F5F5', justifyContent: 'center', alignItems: 'center', borderRadius: 25 },
     confirmBtn: { backgroundColor: '#0288D1', paddingVertical: 15, width: '100%', borderRadius: 12, alignItems: 'center', marginBottom: 15 },
     cancelBtn: { padding: 10 },
+
+    // Checkout Modal
+    checkoutOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+    checkoutContent: { backgroundColor: '#fff', borderTopLeftRadius: 25, borderTopRightRadius: 25, padding: 20, maxHeight: '90%' },
+    checkoutHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
+    checkoutTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+    stepIndicator: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 15 },
+    stepDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#E0E0E0' },
+    stepDotActive: { backgroundColor: '#0288D1', width: 16, height: 16, borderRadius: 8 },
+    stepLine: { width: 40, height: 2, backgroundColor: '#E0E0E0', marginHorizontal: 5 },
+    checkoutItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderColor: '#f0f0f0' },
+    inputLabel: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8, marginTop: 15 },
+    checkoutInput: { backgroundColor: '#F5F5F5', padding: 15, borderRadius: 10, fontSize: 16, borderWidth: 1, borderColor: '#E0E0E0' },
+    paymentOption: { flex: 1, alignItems: 'center', padding: 15, borderRadius: 12, borderWidth: 2, borderColor: '#E0E0E0', gap: 5 },
+    paymentOptionActive: { borderColor: '#0288D1', backgroundColor: '#E3F2FD' },
+    checkoutNextBtn: { backgroundColor: '#0288D1', paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginTop: 15 },
+    checkoutNextBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });
 
 export default PosScreen;

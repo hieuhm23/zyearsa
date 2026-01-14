@@ -39,10 +39,10 @@ const LoginScreen = ({ navigation }: any) => {
                 </View>
 
                 <View style={styles.formCard}>
-                    <Text style={styles.welcomeText}>Đăng nhập Dược sĩ</Text>
+                    <Text style={styles.welcomeText}>Đăng nhập</Text>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>MÃ DƯỢC SĨ</Text>
+                        <Text style={styles.label}>Mã nhân viên</Text>
                         <TextInput
                             style={styles.input}
                             placeholder="Nhập mã nhân viên..."
@@ -54,7 +54,7 @@ const LoginScreen = ({ navigation }: any) => {
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>MẬT KHẨU</Text>
+                        <Text style={styles.label}>Mật khẩu</Text>
                         <TextInput
                             style={styles.input}
                             placeholder="******"
@@ -66,7 +66,7 @@ const LoginScreen = ({ navigation }: any) => {
                     </View>
 
                     <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                        <Text style={styles.loginButtonText}>VÀO CA LÀM VIỆC</Text>
+                        <Text style={styles.loginButtonText}>ĐĂNG NHẬP</Text>
                     </TouchableOpacity>
                 </View>
 

@@ -101,6 +101,12 @@ jobs:
             echo "❌ Error: Build failed (No .app found)."
             exit 1
           fi
+
+          # 🚨 FIX QUAN TRỌNG: Copy thủ công Bundle và Assets vào trong App
+          # Vì SKIP_BUNDLING=1 nên Xcode không tự làm việc này
+          echo "📂 Copying JS Bundle and Assets to $APP_PATH..."
+          cp ios/main.jsbundle "$APP_PATH/main.jsbundle"
+          cp -R ios/assets "$APP_PATH/"
           
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/

@@ -574,6 +574,8 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderBottomWidth: 1,
         borderColor: '#eee',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
     },
     tabTitle: { fontWeight: 'bold', fontSize: 16, marginBottom: 10 },
     tabButtons: { flexDirection: 'row', gap: 15 },
@@ -584,8 +586,7 @@ const styles = StyleSheet.create({
     checkboxActive: { backgroundColor: '#0288D1', borderColor: '#0288D1' },
 
     // Content
-    // Content
-    content: { flex: 1, padding: 10, backgroundColor: '#F5F5F5', borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+    content: { flex: 1, padding: 10, backgroundColor: '#F5F5F5' },
     emptyState: { alignItems: 'center', marginTop: 60 },
     emptyText: { fontSize: 16, color: '#999', marginTop: 15 },
     emptyHint: { fontSize: 13, color: '#bbb', marginTop: 5 },
@@ -690,7 +691,7 @@ const styles = StyleSheet.create({
 
     // Checkout Modal
     checkoutOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-    checkoutContent: { backgroundColor: '#fff', borderTopLeftRadius: 25, borderTopRightRadius: 25, padding: 20, maxHeight: '90%' },
+    checkoutContent: { backgroundColor: '#fff', borderTopLeftRadius: 25, borderTopRightRadius: 25, padding: 20, minHeight: '60%', maxHeight: '90%' },
     checkoutHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
     checkoutTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
     stepIndicator: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 15 },

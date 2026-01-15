@@ -251,7 +251,7 @@ const PosScreen = ({ navigation }: any) => {
                 </View>
 
                 {/* SEARCH RESULTS OVERLAY */}
-                {searchResults.length > 0 && (
+                {searchQuery.length > 0 && searchResults.length > 0 && (
                     <View style={styles.searchResultContainer}>
                         <FlatList
                             data={searchResults}
@@ -408,7 +408,10 @@ const PosScreen = ({ navigation }: any) => {
 
                 {/* CHECKOUT MODAL - 3 STEPS */}
                 <Modal visible={checkoutVisible} transparent animationType="slide">
-                    <View style={styles.checkoutOverlay}>
+                    <KeyboardAvoidingView
+                        style={styles.checkoutOverlay}
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    >
                         <View style={styles.checkoutContent}>
                             {/* Header */}
                             <View style={styles.checkoutHeader}>
@@ -537,7 +540,7 @@ const PosScreen = ({ navigation }: any) => {
                                 </Text>
                             </TouchableOpacity>
                         </View>
-                    </View>
+                    </KeyboardAvoidingView>
                 </Modal>
 
                 <QRScanner visible={showScanner} onClose={() => setShowScanner(false)} onScan={handleScan} />
@@ -671,7 +674,7 @@ const styles = StyleSheet.create({
 
     // Search Results
     searchResultContainer: {
-        position: 'absolute', top: 70, left: 15, right: 15, backgroundColor: '#fff', zIndex: 100, borderRadius: 12, elevation: 10, maxHeight: 300
+        position: 'absolute', top: 120, left: 15, right: 15, backgroundColor: '#fff', zIndex: 100, borderRadius: 12, elevation: 10, maxHeight: 300, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8
     },
     resultItem: { flexDirection: 'row', padding: 12, borderBottomWidth: 1, borderColor: '#f0f0f0', alignItems: 'center' },
     resultImage: { width: 40, height: 40, borderRadius: 6, backgroundColor: '#eee', marginRight: 10 },

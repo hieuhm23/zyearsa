@@ -48,7 +48,12 @@
     ],
     "updates": {
       "url": "https://u.expo.dev/22440a9f-50a7-4aca-9af3-6a3a1c453321",
-      "fallbackToCacheTimeout": 0
+      "fallbackToCacheTimeout": 0,
+      "enabled": true,
+      "checkOnLaunch": "ALWAYS",
+      "requestHeaders": {
+        "expo-channel-name": "production"
+      }
     },
     "extra": {
       "eas": {

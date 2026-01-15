@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -11,11 +11,32 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Updates from 'expo-updates';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }: any) => {
     const insets = useSafeAreaInsets();
+    const [updateInfo, setUpdateInfo] = useState<string>('Checking...');
+
+    // Check for OTA updates
+    useEffect(() => {
+        async function checkUpdates() {
+            try {
+                const update = await Updates.checkForUpdateAsync();
+                if (update.isAvailable) {
+                    setUpdateInfo('🟢 Update available!');
+                    await Updates.fetchUpdateAsync();
+                    setUpdateInfo('✅ Downloaded! Restart to apply');
+                } else {
+                    setUpdateInfo('🔵 App is up to date (v1.0.1-OTA)');
+                }
+            } catch (e: any) {
+                setUpdateInfo('🔴 OTA Error: ' + e.message);
+            }
+        }
+        checkUpdates();
+    }, []);
 
     const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
         sales: true,
@@ -85,6 +106,10 @@ const HomeScreen = ({ navigation }: any) => {
 
             {/* 2. BODY CONTENT */}
             <View style={styles.bodyContainer}>
+                {/* OTA Debug Info */}
+                <View style={{ backgroundColor: '#1565C0', padding: 8, marginHorizontal: 15, marginTop: 10, borderRadius: 8 }}>
+                    <Text style={{ color: '#fff', fontSize: 12, textAlign: 'center' }}>{updateInfo}</Text>
+                </View>
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
 
                     {/* Section: Bán hàng */}

@@ -44,7 +44,8 @@
           "cameraPermission": "Ứng dụng cần truy cập Camera để quét mã vạch thuốc."
         }
       ],
-      "expo-updates"
+      "expo-updates",
+      "expo-secure-store"
     ],
     "updates": {
       "url": "https://u.expo.dev/22440a9f-50a7-4aca-9af3-6a3a1c453321",

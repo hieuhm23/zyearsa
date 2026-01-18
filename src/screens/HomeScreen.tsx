@@ -13,8 +13,8 @@ import {
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Updates from 'expo-updates';
-import { PRODUCTS } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
+import { inventoryService } from '../services/inventoryService';
 
 const { width } = Dimensions.get('window');
 
@@ -31,24 +31,38 @@ const HomeScreen = ({ navigation }: any) => {
     });
 
     useEffect(() => {
-        const today = new Date();
-        const warningDate = new Date();
-        warningDate.setDate(today.getDate() + 90);
-
-        let expCount = 0;
-        let stockCount = 0;
-
-        PRODUCTS.forEach(p => {
-            if (p.stock < 10) stockCount++;
-            if (p.expiryDate) {
-                const exp = new Date(p.expiryDate);
-                if (exp < warningDate) expCount++;
-            }
-        });
-
-        setExpiryWarning(expCount);
-        setLowStockWarning(stockCount);
+        fetchWarnings();
     }, []);
+
+    const fetchWarnings = async () => {
+        try {
+            const products = await inventoryService.getProducts();
+            if (!products) return;
+
+            const today = new Date();
+            const warningDate = new Date();
+            warningDate.setDate(today.getDate() + 90); // Cảnh báo trước 90 ngày
+
+            let expCount = 0;
+            let stockCount = 0;
+
+            products.forEach((p: any) => {
+                // Kiểm tra tồn kho thấp (dưới 10)
+                if (p.stock < 10) stockCount++;
+
+                // Kiểm tra hạn sử dụng
+                if (p.expiry_date) {
+                    const exp = new Date(p.expiry_date);
+                    if (exp < warningDate) expCount++;
+                }
+            });
+
+            setExpiryWarning(expCount);
+            setLowStockWarning(stockCount);
+        } catch (error) {
+            console.error('Error fetching warnings:', error);
+        }
+    };
 
     const handleLogout = () => {
         Alert.alert(

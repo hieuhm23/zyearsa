@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import { PRODUCTS } from '../data/mockData';
 import QRScanner from '../components/QRScanner';
 import { inventoryService, Product, ProductUnit } from '../services/inventoryService';
+import * as ImagePicker from 'expo-image-picker';
 
 // Mock Warehouses
 const WAREHOUSES = [
@@ -79,6 +80,26 @@ const WarehouseScreen = () => {
         setScannedCode(data);
         setShowScanner(false);
         checkProductInDb(data);
+    };
+
+    const pickImage = async () => {
+        // Xin quyền truy cập thư viện ảnh
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Quyền bị từ chối', 'Cần cấp quyền truy cập thư viện ảnh để chọn ảnh sản phẩm.');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.7,
+        });
+
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+            setProductImage(result.assets[0].uri);
+        }
     };
 
     const checkProductInDb = (code: string) => {
@@ -161,6 +182,17 @@ const WarehouseScreen = () => {
 
         setLoading(true);
         try {
+            // Upload Image if needed
+            let finalImageUrl = productImage;
+            if (productImage && (productImage.startsWith('file://') || productImage.startsWith('content://'))) {
+                try {
+                    finalImageUrl = await inventoryService.uploadImage(productImage);
+                } catch (imgError) {
+                    console.error('Image upload failed:', imgError);
+                    Alert.alert('Cảnh báo', 'Không thể tải ảnh lên. Thuốc sẽ được lưu không có ảnh mới.');
+                }
+            }
+
             const qtyInput = parseInt(quantity) || 0;
             const priceBig = parseInt(sellPrice) || 0;
 
@@ -188,8 +220,9 @@ const WarehouseScreen = () => {
                 name: productName,
                 barcode: scannedCode,
                 stock: (parseInt(currentStock) || 0) + finalBaseStockAdded,
-                image_url: productImage || '',
-                brand: 'Việt Nam'
+                image_url: finalImageUrl || '',
+                brand: 'Việt Nam',
+                expiry_date: expiryDate ? new Date(expiryDate.split('/').reverse().join('-')).toISOString() : null
             };
 
             await inventoryService.upsertProduct(productData, units);
@@ -287,16 +320,16 @@ const WarehouseScreen = () => {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    <View style={styles.imageBox}>
+                    <TouchableOpacity style={styles.imageBox} onPress={pickImage}>
                         {productImage ? (
                             <Image source={{ uri: productImage }} style={styles.imagePreview} />
                         ) : (
                             <View style={{ alignItems: 'center' }}>
                                 <MaterialCommunityIcons name="image-plus" size={30} color="#555" />
-                                <Text style={{ fontSize: 10, color: '#555' }}>Ảnh</Text>
+                                <Text style={{ fontSize: 10, color: '#555' }}>Chọn ảnh</Text>
                             </View>
                         )}
-                    </View>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Name & Qty */}

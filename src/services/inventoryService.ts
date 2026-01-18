@@ -16,6 +16,7 @@ export type Product = {
     category: string;
     stock: number;
     image_url: string;
+    expiry_date?: string | null;
     units?: ProductUnit[];
 };
 
@@ -80,5 +81,38 @@ export const inventoryService = {
         // Xóa sản phẩm chính
         const { error: prodError } = await supabase.from('products').delete().eq('id', id);
         if (prodError) throw prodError;
+    },
+
+    // Upload ảnh sản phẩm
+    uploadImage: async (uri: string) => {
+        try {
+            // 1. Fetch URI to Blob
+            const response = await fetch(uri);
+            const blob = await response.blob();
+
+            // 2. Generate filename
+            const filename = `product-${Date.now()}.jpg`;
+
+            // 3. Upload to Supabase Storage
+            const { data, error } = await supabase
+                .storage
+                .from('product-images')
+                .upload(filename, blob, {
+                    contentType: 'image/jpeg',
+                });
+
+            if (error) throw error;
+
+            // 4. Get Public URL
+            const { data: { publicUrl } } = supabase
+                .storage
+                .from('product-images')
+                .getPublicUrl(filename);
+
+            return publicUrl;
+        } catch (error) {
+            console.error('Upload error:', error);
+            throw error;
+        }
     }
 };

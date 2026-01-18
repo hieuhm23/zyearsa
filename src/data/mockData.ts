@@ -11,13 +11,18 @@ export const CATEGORIES = [
 export const PRODUCTS = [
     {
         id: 'T001',
+        barcode: '8934588063176',
         name: 'Panadol Extra (Đỏ)',
-        desc: 'Paracetamol 500mg',
+        desc: 'Paracetamol 500mg - Giảm đau hạ sốt',
         category: 'gn',
-        image: 'https://cdn.nhathuoclongchau.com.vn/unsafe/375x0/filters:quality(90)/httpscms-prod.s3-sgn09.fptcloud.com/DSCF_5852_4057881075.jpg',
-        stock: 2400, // Tổng số viên
-        expDate: '12/2026',
-        // Cấu hình nhiều đơn vị tính
+        isHot: true,
+        isPrescription: false,
+        image: 'https://placehold.co/200x200/E53935/FFFFFF?text=Panadol',
+        stock: 2400,
+        expiryDate: '2027-12-01',
+        caution: '⚠️ Lưu ý: Không dùng quá 8 viên/ngày. Thận trọng với người suy gan.',
+        origin: 'Việt Nam',
+        usage: 'Uống sau khi ăn. Người lớn 1-2 viên/lần, cách nhau 4-6 giờ.',
         units: [
             { name: 'Viên', price: 1500 },
             { name: 'Vỉ (12v)', price: 18000 },
@@ -27,11 +32,14 @@ export const PRODUCTS = [
     {
         id: 'T002',
         name: 'Augmentin 625mg',
-        desc: 'Amoxicillin + Clavulanic',
+        desc: 'Amoxicillin + Clavulanic - Kháng sinh',
         category: 'ks',
-        image: 'https://cdn.nhathuoclongchau.com.vn/unsafe/375x0/filters:quality(90)/httpscms-prod.s3-sgn09.fptcloud.com/DSCF_0428_e409605786.jpg',
-        stock: 50,
-        expDate: '05/2025',
+        isHot: true,
+        isPrescription: true,
+        image: 'https://placehold.co/200x200/1976D2/FFFFFF?text=Augmentin',
+        stock: 8, // Thấp
+        expiryDate: '2026-06-15',
+        caution: '⛔ TRÁNH DÙNG: Người dị ứng Penicillin. Gây tiêu chảy.',
         units: [
             { name: 'Viên', price: 12000 },
             { name: 'Vỉ (7v)', price: 80000 },
@@ -43,26 +51,26 @@ export const PRODUCTS = [
         name: 'Berberin Mộc Hương',
         desc: 'Trị tiêu chảy, đau bụng',
         category: 'tieuhoa',
-        image: 'https://thuocdantoc.org/wp-content/uploads/2019/10/berberin-moc-huong-l.jpg',
+        image: 'https://placehold.co/200x200/388E3C/FFFFFF?text=Berberin',
         stock: 120,
-        expDate: '10/2027',
+        expiryDate: '2027-10-01',
+        caution: '🚫 Phụ nữ mang thai TUYỆT ĐỐI KHÔNG DÙNG.',
         units: [
-            { name: 'Lọ 100v', price: 50000 },
-            { name: 'Lọ 50v', price: 30000 }
+            { name: 'Lọ 100v', price: 50000 }
         ]
     },
     {
         id: 'T004',
-        name: 'Vitamin C Enervon',
-        desc: 'Tăng sức đề kháng',
-        category: 'vit',
-        image: 'https://nhathuoclongchau.com.vn/images/product/2020/09/enervon-c-100v-dhg-2139-6184_large.jpg',
+        name: 'Cefixim 200mg',
+        desc: 'Kháng sinh thế hệ 3',
+        category: 'ks',
+        image: 'https://placehold.co/200x200/FFC107/FFFFFF?text=Cefixim',
         stock: 500,
-        expDate: '01/2026',
+        expiryDate: '2026-03-30', // Sắp hết hạn
+        caution: '⚠️ Nguy hại thận. Cần uống nhiều nước.',
         units: [
-            { name: 'Viên', price: 3500 },
-            { name: 'Vỉ (10v)', price: 32000 },
-            { name: 'Hộp (100v)', price: 300000 }
+            { name: 'Viên', price: 6000 },
+            { name: 'Vỉ (10v)', price: 55000 }
         ]
     },
     {
@@ -70,14 +78,15 @@ export const PRODUCTS = [
         name: 'Khẩu trang Y tế 4 lớp',
         desc: 'Hộp 50 chiếc - Kháng khuẩn',
         category: 'yt',
-        image: 'https://cdn.tgdd.vn/Products/Images/10202/235787/khau-trang-y-te-famapro-vn95-hop-10-cai-thumb-600x600.jpg',
+        image: 'https://placehold.co/200x200/00ACC1/FFFFFF?text=Khau+trang',
         stock: 80,
-        expDate: 'N/A',
+        expiryDate: '2028-01-01',
+        caution: '',
         units: [
             { name: 'Chiếc', price: 1000 },
             { name: 'Hộp (50c)', price: 45000 }
         ]
-    },
+    }
 ];
 
 // Dữ liệu Chuẩn Quốc Gia (Giả lập) - Master Data
@@ -112,6 +121,7 @@ export const GLOBAL_DRUG_DATABASE = [
     },
     {
         id: '8938887776665',
+        barcode: '8938887776665',
         name: 'Dung dịch vệ sinh phụ nữ Dạ Hương',
         activeIngredient: 'Muối, Lô hội',
         concentration: '100ml',

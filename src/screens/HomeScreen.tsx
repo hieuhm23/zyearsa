@@ -12,27 +12,49 @@ import {
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Updates from 'expo-updates';
+import { PRODUCTS } from '../data/mockData';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }: any) => {
     const insets = useSafeAreaInsets();
-    const [updateInfo, setUpdateInfo] = useState<string>('Checking...');
+    const [expiryWarning, setExpiryWarning] = useState(0);
+    const [lowStockWarning, setLowStockWarning] = useState(0);
 
-    // Check for OTA updates
+    // Calculate Warnings on Load
+    useEffect(() => {
+        const today = new Date();
+        const warningDate = new Date();
+        warningDate.setDate(today.getDate() + 90); // 3 months warning
+
+        let expCount = 0;
+        let stockCount = 0;
+
+        PRODUCTS.forEach(p => {
+            if (p.stock < 10) stockCount++;
+
+            if (p.expiryDate) {
+                const exp = new Date(p.expiryDate);
+                // Simple parsing for YYYY-MM-DD
+                if (exp < warningDate) expCount++;
+            }
+        });
+
+        setExpiryWarning(expCount);
+        setLowStockWarning(stockCount);
+    }, []);
+
+    // Silent background OTA check (no UI display)
     useEffect(() => {
         async function checkUpdates() {
             try {
                 const update = await Updates.checkForUpdateAsync();
                 if (update.isAvailable) {
-                    setUpdateInfo('🟢 Update available!');
                     await Updates.fetchUpdateAsync();
-                    setUpdateInfo('✅ Downloaded! Restart to apply');
-                } else {
-                    setUpdateInfo('🔵 App is up to date (v1.0.1-OTA)');
+                    // Update downloaded - will apply on next restart
                 }
-            } catch (e: any) {
-                setUpdateInfo('🔴 OTA Error: ' + e.message);
+            } catch (e) {
+                // Silent fail
             }
         }
         checkUpdates();
@@ -41,7 +63,7 @@ const HomeScreen = ({ navigation }: any) => {
     const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
         sales: true,
         warehouse: true,
-        operation: false
+        operation: true
     });
 
     const toggleSection = (section: string) => {
@@ -50,18 +72,25 @@ const HomeScreen = ({ navigation }: any) => {
 
     const handlePress = (item: any) => {
         if (item.screen) {
-            if (item.screen === 'Pos' || item.screen === 'Warehouse') {
-                navigation.navigate(item.screen);
-            } else {
-                // console.log('Coming soon: ' + item.title);
-            }
+            // Navigate directly if screen name is provided
+            navigation.navigate(item.screen);
         }
     };
 
-    const renderGridItem = (title: string, iconName: keyof typeof MaterialCommunityIcons.glyphMap, color: string, screen: string = '') => (
+    const renderGridItem = (title: string, iconName: keyof typeof MaterialCommunityIcons.glyphMap, color: string, screen: string = '', badge?: string) => (
         <TouchableOpacity style={styles.gridItem} onPress={() => handlePress({ screen, title })}>
             <View style={[styles.iconContainer, { backgroundColor: `${color}15` }]}>
                 <MaterialCommunityIcons name={iconName} size={28} color={color} />
+                {badge && (
+                    <View style={{
+                        position: 'absolute', top: -8, right: -8,
+                        backgroundColor: '#FF3D00', borderRadius: 8, paddingHorizontal: 5, paddingVertical: 2,
+                        borderWidth: 2, borderColor: '#fff',
+                        shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 1.41, elevation: 2
+                    }}>
+                        <Text style={{ color: '#fff', fontSize: 8, fontWeight: '900' }}>{badge}</Text>
+                    </View>
+                )}
             </View>
             <Text style={styles.gridTitle} numberOfLines={2}>{title}</Text>
         </TouchableOpacity>
@@ -75,13 +104,15 @@ const HomeScreen = ({ navigation }: any) => {
             {/* Dynamic paddingTop based on Safe Area Insets */}
             <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
                 <View style={styles.userInfoRow}>
-                    <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>H</Text>
-                    </View>
-                    <View style={styles.userDetail}>
-                        <Text style={styles.userName}>Hoàng Minh Hiếu - 65680</Text>
-                        <Text style={styles.userAddress}>81362 - LC HNI 15 Hoàng Như Tiếp, P. Bồ Đề</Text>
-                    </View>
+                    <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                        <View style={styles.avatar}>
+                            <Text style={styles.avatarText}>H</Text>
+                        </View>
+                        <View style={styles.userDetail}>
+                            <Text style={styles.userName}>Dược sĩ: Hoàng Minh Hiếu</Text>
+                            <Text style={styles.userAddress}>Nhà thuốc Zyea Pharmacy</Text>
+                        </View>
+                    </TouchableOpacity>
                     <TouchableOpacity style={styles.refreshBtn}>
                         <Ionicons name="reload" size={20} color="#fff" />
                     </TouchableOpacity>
@@ -106,11 +137,43 @@ const HomeScreen = ({ navigation }: any) => {
 
             {/* 2. BODY CONTENT */}
             <View style={styles.bodyContainer}>
-                {/* OTA Debug Info */}
-                <View style={{ backgroundColor: '#1565C0', padding: 8, marginHorizontal: 15, marginTop: 10, borderRadius: 8 }}>
-                    <Text style={{ color: '#fff', fontSize: 12, textAlign: 'center' }}>{updateInfo}</Text>
-                </View>
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+                    {/* INVENTORY WARNING DASHBOARD */}
+                    {(expiryWarning > 0 || lowStockWarning > 0) && (
+                        <View style={{ marginBottom: 15 }}>
+                            <View style={{ flexDirection: 'row', gap: 10 }}>
+                                {expiryWarning > 0 && (
+                                    <TouchableOpacity
+                                        style={{ flex: 1, backgroundColor: '#FFEBEE', padding: 10, borderRadius: 10, flexDirection: 'row', alignItems: 'center', borderColor: '#FFCDD2', borderWidth: 1 }}
+                                        onPress={() => navigation.navigate('Warehouse')}
+                                    >
+                                        <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#EF5350', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                                            <Ionicons name="alert-circle" size={20} color="#fff" />
+                                        </View>
+                                        <View>
+                                            <Text style={{ color: '#B71C1C', fontWeight: 'bold' }}>{expiryWarning} Thuốc</Text>
+                                            <Text style={{ color: '#C62828', fontSize: 11 }}>Sắp hết hạn</Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                )}
+
+                                {lowStockWarning > 0 && (
+                                    <TouchableOpacity
+                                        style={{ flex: 1, backgroundColor: '#FFF3E0', padding: 10, borderRadius: 10, flexDirection: 'row', alignItems: 'center', borderColor: '#FFE0B2', borderWidth: 1 }}
+                                        onPress={() => navigation.navigate('Warehouse')}
+                                    >
+                                        <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#FF9800', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+                                            <MaterialCommunityIcons name="package-variant" size={20} color="#fff" />
+                                        </View>
+                                        <View>
+                                            <Text style={{ color: '#E65100', fontWeight: 'bold' }}>{lowStockWarning} Thuốc</Text>
+                                            <Text style={{ color: '#EF6C00', fontSize: 11 }}>Tồn kho thấp</Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </View>
+                    )}
 
                     {/* Section: Bán hàng */}
                     <View style={styles.cardSection}>
@@ -125,8 +188,9 @@ const HomeScreen = ({ navigation }: any) => {
                         {expandedSections['sales'] && (
                             <View style={styles.gridContainer}>
                                 {renderGridItem('Giỏ hàng', 'cart-outline', '#0288D1', 'Pos')}
-                                {renderGridItem('Cắt liều', 'content-cut', '#F57C00')}
-                                {renderGridItem('Trả hàng', 'keyboard-return', '#D32F2F')}
+
+                                {renderGridItem('Cắt liều', 'content-cut', '#F57C00', 'Dose')}
+                                {renderGridItem('Trả hàng', 'backup-restore', '#D32F2F', 'OrderHistory', 'MỚI')}
                                 {/* {renderGridItem('Tư vấn VX', 'needle', '#0097A7')} */}
                                 {/* {renderGridItem('DS đơn VX', 'clipboard-list-outline', '#1976D2')} */}
                             </View>
@@ -145,8 +209,10 @@ const HomeScreen = ({ navigation }: any) => {
 
                         {expandedSections['warehouse'] && (
                             <View style={styles.gridContainer}>
+                                {renderGridItem('Nhập kho', 'inbox-arrow-down', '#388E3C', 'Warehouse')}
+                                {/* {renderGridItem('Chuyển kho', 'swap-horizontal', '#0288D1', 'Transfer')} */}
+                                {renderGridItem('Kiểm kê kho', 'clipboard-check-outline', '#4CAF50', 'Audit')}
                                 {renderGridItem('Xuất SD', 'export', '#FBC02D', 'Warehouse')}
-                                {renderGridItem('Báo cáo', 'chart-bar', '#388E3C', 'Report')}
                             </View>
                         )}
                     </View>
@@ -156,22 +222,20 @@ const HomeScreen = ({ navigation }: any) => {
                         <TouchableOpacity style={styles.cardHeader} onPress={() => toggleSection('operation')}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <MaterialCommunityIcons name="cog" size={18} color="#607D8B" style={{ marginRight: 6 }} />
-                                <Text style={styles.cardTitle}>Vận hành shop</Text>
+                                <Text style={styles.cardTitle}>Vận hành</Text>
                             </View>
                             <Ionicons name={expandedSections['operation'] ? "chevron-up" : "chevron-down"} size={20} color="#999" />
                         </TouchableOpacity>
                         {expandedSections['operation'] && (
                             <View style={styles.gridContainer}>
-                                {renderGridItem('Chấm công', 'calendar-clock', '#5C6BC0')}
-                                {renderGridItem('KPI', 'target', '#EC407A')}
+                                {renderGridItem('Báo cáo', 'chart-bar', '#4CAF50', 'Report')}
+                                {renderGridItem('AI Dược sĩ', 'robot', '#009688', 'AIDoctor', 'HOT')}
+                                {renderGridItem('Nhân viên', 'account-group', '#2196F3', 'Staff')}
+                                {renderGridItem('Khách hàng', 'account-heart', '#E91E63', 'Customer')}
                             </View>
                         )}
                     </View>
 
-                    {/* Footer Image */}
-                    <View style={styles.footerBanner}>
-                        <Text style={{ color: '#999', fontSize: 12, textAlign: 'center' }}>Zyea Pharma System v2.0</Text>
-                    </View>
 
                 </ScrollView>
             </View >
@@ -184,7 +248,7 @@ const HomeScreen = ({ navigation }: any) => {
                     <Text style={styles.tabLabelActive}>Trang chủ</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.tabItem}>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('OrderHistory')}>
                     <Ionicons name="document-text-outline" size={24} color="#999" />
                     <Text style={styles.tabLabel}>Đơn hàng</Text>
                 </TouchableOpacity>
@@ -343,18 +407,25 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     iconContainer: {
-        width: 50,
-        height: 50,
-        borderRadius: 16, // Bo góc mềm hơn chút (Squircle)
+        width: 54,
+        height: 54,
+        borderRadius: 20, // Modern Squircle
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 8,
+        // Soft Shadow
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 1,
     },
     gridTitle: {
         fontSize: 12,
-        color: '#333',
+        color: '#444',
         textAlign: 'center',
-        fontWeight: '500',
+        fontWeight: '600',
+        lineHeight: 16,
     },
     footerBanner: {
         paddingVertical: 20,

@@ -24,11 +24,9 @@ const QRScanner = ({ visible, onClose, onScan }: QRScannerProps) => {
     const handleBarCodeScanned = ({ data }: { data: string }) => {
         if (scanned) return;
         setScanned(true);
-        // Rung nhẹ haptic feedback (nếu cần)
         onScan(data);
-
-        // Reset scan sau 2 giây để quét tiếp nếu cần
-        setTimeout(() => setScanned(false), 2000);
+        // Reset nhanh hơn (0.8s) để quét liên tục mượt mà
+        setTimeout(() => setScanned(false), 800);
     };
 
     if (hasPermission === null) {
@@ -45,7 +43,7 @@ const QRScanner = ({ visible, onClose, onScan }: QRScannerProps) => {
                     style={StyleSheet.absoluteFillObject}
                     onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
                     barcodeScannerSettings={{
-                        barcodeTypes: ["qr", "ean13", "ean8", "code128"],
+                        barcodeTypes: ["qr", "ean13", "ean8", "code128", "code39", "upc_a", "upc_e", "itf14", "codabar"],
                     }}
                 />
 
@@ -100,18 +98,22 @@ const styles = StyleSheet.create({
     },
     centerRow: {
         flexDirection: 'row',
-        height: 250,
+        height: 160,
     },
     sideOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.6)',
     },
     scanFrame: {
-        width: 250,
+        width: '85%',
         borderColor: '#00FF00', // Green Laser
         borderWidth: 2,
+        borderRadius: 12,
         backgroundColor: 'transparent',
+        justifyContent: 'center',
+        alignItems: 'center'
     },
+    // Laser line deleted
     bottomOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.6)',

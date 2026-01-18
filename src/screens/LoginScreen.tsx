@@ -9,17 +9,31 @@ import {
     KeyboardAvoidingView,
     Platform,
     StatusBar,
+    ActivityIndicator
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
 
 const LoginScreen = ({ navigation }: any) => {
     const insets = useSafeAreaInsets();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const { signIn, loading } = useAuth();
 
-    const handleLogin = () => {
-        navigation.replace('Home');
+    const handleLogin = async () => {
+        if (!username || !password) {
+            Alert.alert('Cảnh báo', 'Vui lòng nhập đầy đủ thông tin');
+            return;
+        }
+
+        const result = await signIn(username, password);
+
+        if (result.error) {
+            Alert.alert('Lỗi đăng nhập', result.error.message || 'Kiểm tra lại tài khoản hoặc internet');
+        } else {
+            navigation.replace('Home');
+        }
     };
 
     return (
@@ -39,17 +53,17 @@ const LoginScreen = ({ navigation }: any) => {
                 </View>
 
                 <View style={styles.formCard}>
-                    <Text style={styles.welcomeText}>Đăng nhập</Text>
+                    <Text style={styles.welcomeText}>Đăng nhập quản lý</Text>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Mã nhân viên</Text>
+                        <Text style={styles.label}>Email / Mã nhân viên</Text>
                         <TextInput
                             style={styles.input}
                             placeholder="Nhập mã nhân viên..."
                             placeholderTextColor="#999"
                             value={username}
                             onChangeText={setUsername}
-                            autoCapitalize="characters"
+                            autoCapitalize="none"
                         />
                     </View>
 
@@ -65,8 +79,16 @@ const LoginScreen = ({ navigation }: any) => {
                         />
                     </View>
 
-                    <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                        <Text style={styles.loginButtonText}>ĐĂNG NHẬP</Text>
+                    <TouchableOpacity
+                        style={[styles.loginButton, loading && { backgroundColor: '#B0BEC5' }]}
+                        onPress={handleLogin}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color="#fff" />
+                        ) : (
+                            <Text style={styles.loginButtonText}>ĐĂNG NHẬP</Text>
+                        )}
                     </TouchableOpacity>
                 </View>
 

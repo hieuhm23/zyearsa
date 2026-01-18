@@ -24,8 +24,8 @@ jobs:
         run: |
           npm cache clean --force
           rm -rf node_modules
-          rm -rf ios/Pods
-          rm -rf ios/build
+          rm -rf ios
+          rm -rf ~/Library/Developer/Xcode/DerivedData
 
       - name: 📦 Install dependencies
         run: npm install
@@ -79,9 +79,8 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            AD_HOC_CODE_SIGNING_ALLOWED=NO \
-            clean build \
-            | xcpretty && exit ${PIPESTATUS[0]}
+            -allowProvisioningUpdates \
+            clean build
 
       - name: 📦 Pack to IPA
         run: |

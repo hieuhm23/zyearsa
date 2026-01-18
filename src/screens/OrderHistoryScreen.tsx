@@ -1,96 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SectionList, TouchableOpacity, TextInput, Modal, ScrollView, StatusBar } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SectionList, TouchableOpacity, TextInput, Modal, ScrollView, StatusBar, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PRODUCTS } from '../data/mockData';
-
-// Mock Data for Orders (Updated structure with items)
-const MOCK_ORDERS = [
-    {
-        title: 'Thứ Năm, 15/01/2026',
-        data: [
-            {
-                id: '#6704983',
-                createdAt: '15/01/2026 21:18',
-                customerPhone: '0971723802',
-                customerName: 'Nguyễn Văn Hùng',
-                staffName: 'Đinh Thị Bích Nhung',
-                total: 10000,
-                paymentMethod: 'Tiền mặt',
-                status: 'completed',
-                statusText: 'Hoàn thành',
-                items: [
-                    { name: 'Panadol Extra', quantity: 2, unit: 'Viên', price: 1500, subtotal: 3000 },
-                    { name: 'Vitamin C Enervon', quantity: 2, unit: 'Viên', price: 3500, subtotal: 7000 }
-                ]
-            },
-            {
-                id: '#5612179',
-                createdAt: '15/01/2026 19:45',
-                customerPhone: '0905123456',
-                customerName: 'Trần Thị Lan',
-                staffName: 'Nguyễn Văn A',
-                total: 239990,
-                paymentMethod: 'Chuyển khoản',
-                status: 'completed',
-                statusText: 'Hoàn thành',
-                items: [
-                    { name: 'Augmentin 625mg', quantity: 2, unit: 'Hộp (2 vỉ)', price: 155000, subtotal: 310000 }
-                ]
-            },
-            {
-                id: '#5577957',
-                createdAt: '15/01/2026 18:20',
-                customerPhone: 'Khách lẻ',
-                customerName: 'Khách lẻ',
-                staffName: 'Đinh Thị Bích Nhung',
-                total: 5000,
-                paymentMethod: 'Tiền mặt',
-                status: 'completed',
-                statusText: 'Hoàn thành',
-                items: [
-                    { name: 'Khẩu trang Y tế 4 lớp', quantity: 5, unit: 'Chiếc', price: 1000, subtotal: 5000 }
-                ]
-            }
-        ]
-    },
-    {
-        title: 'Thứ Tư, 14/01/2026',
-        data: [
-            {
-                id: '#5475410',
-                createdAt: '14/01/2026 16:30',
-                customerPhone: '0988777666',
-                customerName: 'Lê Minh Tuấn',
-                staffName: 'Trần Thị B',
-                total: 42080,
-                paymentMethod: 'Tiền mặt',
-                status: 'completed',
-                statusText: 'Hoàn thành',
-                items: [
-                    { name: 'Berberin Mộc Hương', quantity: 1, unit: 'Lọ 50v', price: 30000, subtotal: 30000 },
-                    { name: 'Panadol Extra', quantity: 8, unit: 'Viên', price: 1510, subtotal: 12080 }
-                ]
-            },
-            {
-                id: '#5123456',
-                createdAt: '14/01/2026 10:15',
-                customerPhone: '0912345678',
-                customerName: 'Phạm Văn Đức',
-                staffName: 'Đinh Thị Bích Nhung',
-                total: 130000,
-                paymentMethod: 'Chuyển khoản',
-                status: 'completed',
-                statusText: 'Hoàn thành',
-                items: [
-                    { name: 'Khẩu trang Y tế 4 lớp', quantity: 2, unit: 'Hộp (50c)', price: 45000, subtotal: 90000 },
-                    { name: 'Vitamin C Enervon', quantity: 1, unit: 'Vỉ (10v)', price: 32000, subtotal: 32000 }
-                ]
-            }
-        ]
-    }
-];
+import { orderService } from '../services/orderService';
+import { useAuth } from '../context/AuthContext';
 
 const OrderHistoryScreen = () => {
     const insets = useSafeAreaInsets();
@@ -100,14 +16,89 @@ const OrderHistoryScreen = () => {
     const [isTaxSearch, setIsTaxSearch] = useState(false);
     const [expandedOrders, setExpandedOrders] = useState<string[]>([]);
 
+    // Data states
+    const [orders, setOrders] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+
     // UNIFIED MODAL STATE
-    // We use a single modal logic to avoid conflicts
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [isRefundMode, setIsRefundMode] = useState(false);
 
     // REFUND DATA
     const [refundItems, setRefundItems] = useState<{ [key: string]: number }>({});
     const [refundUnits, setRefundUnits] = useState<{ [key: string]: any }>({});
+
+    // Fetch orders from Supabase
+    useEffect(() => {
+        fetchOrders();
+    }, []);
+
+    const fetchOrders = async () => {
+        try {
+            setLoading(true);
+            const data = await orderService.getOrders();
+            if (data) {
+                // Group orders by date
+                const grouped = groupOrdersByDate(data);
+                setOrders(grouped);
+            }
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchOrders();
+        setRefreshing(false);
+    };
+
+    const groupOrdersByDate = (ordersData: any[]) => {
+        const groups: { [key: string]: any[] } = {};
+
+        ordersData.forEach(order => {
+            const date = new Date(order.created_at);
+            const dateKey = date.toLocaleDateString('vi-VN', {
+                weekday: 'long',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+
+            if (!groups[dateKey]) {
+                groups[dateKey] = [];
+            }
+
+            // Transform order data
+            groups[dateKey].push({
+                id: `#${order.id.slice(0, 7).toUpperCase()}`,
+                realId: order.id,
+                createdAt: date.toLocaleString('vi-VN'),
+                customerPhone: order.customer_phone || 'Khách lẻ',
+                customerName: order.customer_name || 'Khách lẻ',
+                staffName: order.staff_name || 'Nhân viên',
+                total: order.total_amount || 0,
+                paymentMethod: order.payment_method === 'cash' ? 'Tiền mặt' : 'Chuyển khoản',
+                status: 'completed',
+                statusText: 'Hoàn thành',
+                items: order.order_items?.map((item: any) => ({
+                    name: item.product_name || item.product_id || 'Sản phẩm',
+                    quantity: item.quantity || 0,
+                    unit: item.unit_name || 'Đơn vị',
+                    price: item.price_at_sale || 0,
+                    subtotal: (item.quantity || 0) * (item.price_at_sale || 0)
+                })) || []
+            });
+        });
+
+        return Object.keys(groups).map(title => ({
+            title,
+            data: groups[title]
+        }));
+    };
 
     const toggleExpand = (id: string) => {
         setExpandedOrders(prev =>
@@ -211,7 +202,13 @@ const OrderHistoryScreen = () => {
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                             <Text style={styles.orderId}>{item.id}</Text>
-                            <TouchableOpacity style={{ marginLeft: 4 }}>
+                            <TouchableOpacity
+                                style={{ marginLeft: 4 }}
+                                onPress={async () => {
+                                    await Clipboard.setStringAsync(item.realId || item.id);
+                                    Alert.alert('✅ Đã sao chép', `Mã đơn hàng ${item.id}`);
+                                }}
+                            >
                                 <Ionicons name="copy-outline" size={14} color="#0288D1" />
                             </TouchableOpacity>
                         </View>
@@ -304,16 +301,31 @@ const OrderHistoryScreen = () => {
             </View>
 
             {/* Content List */}
-            <SectionList
-                sections={MOCK_ORDERS}
-                keyExtractor={(item, index) => item.id + index}
-                renderItem={renderItem}
-                renderSectionHeader={({ section: { title } }) => (
-                    <Text style={styles.sectionHeader}>{title}</Text>
-                )}
-                contentContainerStyle={{ paddingHorizontal: 15, paddingBottom: 20 }}
-                stickySectionHeadersEnabled={false}
-            />
+            {loading ? (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 50 }}>
+                    <ActivityIndicator size="large" color="#0288D1" />
+                    <Text style={{ marginTop: 10, color: '#666' }}>Đang tải đơn hàng...</Text>
+                </View>
+            ) : orders.length === 0 ? (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 50 }}>
+                    <Ionicons name="receipt-outline" size={60} color="#ccc" />
+                    <Text style={{ marginTop: 10, color: '#666', fontSize: 16 }}>Chưa có đơn hàng nào</Text>
+                </View>
+            ) : (
+                <SectionList
+                    sections={orders}
+                    keyExtractor={(item, index) => item.id + index}
+                    renderItem={renderItem}
+                    renderSectionHeader={({ section: { title } }) => (
+                        <Text style={styles.sectionHeader}>{title}</Text>
+                    )}
+                    contentContainerStyle={{ paddingHorizontal: 15, paddingBottom: 20 }}
+                    stickySectionHeadersEnabled={false}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0288D1']} />
+                    }
+                />
+            )}
 
             {/* UNIFIED MODAL */}
             <Modal visible={!!selectedOrder} transparent animationType="slide" onRequestClose={handleCloseModal}>

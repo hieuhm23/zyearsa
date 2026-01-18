@@ -12,9 +12,11 @@ import {
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Updates from 'expo-updates';
+import { useAuth } from '../context/AuthContext';
 
 const SettingsScreen = ({ navigation }: any) => {
     const insets = useSafeAreaInsets();
+    const { signOut, userProfile, session } = useAuth();
     const [faceIdEnabled, setFaceIdEnabled] = useState(false);
     const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
 
@@ -49,13 +51,13 @@ const SettingsScreen = ({ navigation }: any) => {
     const handleLogout = () => {
         Alert.alert(
             'Đăng xuất',
-            'Bạn có chắc muốn đăng xuất?',
+            'Bác có chắc muốn đăng xuất không?',
             [
                 { text: 'Hủy', style: 'cancel' },
                 {
                     text: 'Đăng xuất',
                     style: 'destructive',
-                    onPress: () => navigation.reset({ index: 0, routes: [{ name: 'Login' }] }),
+                    onPress: () => signOut(),
                 },
             ]
         );
@@ -73,19 +75,17 @@ const SettingsScreen = ({ navigation }: any) => {
 
                 <View style={styles.profileSection}>
                     <View style={styles.avatarContainer}>
-                        <MaterialCommunityIcons name="robot-happy" size={50} color="#fff" />
+                        <MaterialCommunityIcons name="account-circle" size={60} color="#fff" />
                     </View>
-                    <Text style={styles.userName}>Hoàng Minh Hiếu - 65680</Text>
-                    <Text style={styles.userAddress}>LC HN1 15 Hoàng Như Tiếp, P. Bồ Đề</Text>
+                    <Text style={styles.userName}>{userProfile?.full_name || session?.user?.email || 'Dược sĩ'}</Text>
+                    <Text style={styles.userAddress}>{userProfile?.role === 'admin' ? 'Quản trị viên' : 'Nhân viên nhà thuốc'}</Text>
                 </View>
             </View>
 
             {/* CONTENT */}
             <ScrollView style={styles.content}>
-                {/* System Settings */}
                 <Text style={styles.sectionTitle}>Cài đặt hệ thống</Text>
 
-                {/* Face ID */}
                 <View style={styles.settingItem}>
                     <View style={styles.settingLeft}>
                         <View style={[styles.iconBox, { backgroundColor: '#E3F2FD' }]}>
@@ -101,7 +101,6 @@ const SettingsScreen = ({ navigation }: any) => {
                     />
                 </View>
 
-                {/* Update App */}
                 <TouchableOpacity style={styles.settingItem} onPress={handleCheckUpdate} disabled={isCheckingUpdate}>
                     <View style={styles.settingLeft}>
                         <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>
@@ -110,14 +109,13 @@ const SettingsScreen = ({ navigation }: any) => {
                         <View>
                             <Text style={styles.settingText}>Cập nhật ứng dụng</Text>
                             <Text style={styles.settingSubText}>
-                                {isCheckingUpdate ? 'Đang kiểm tra...' : 'Phiên bản: 1.0.1'}
+                                {isCheckingUpdate ? 'Đang kiểm tra...' : 'Phiên bản: 1.0.2'}
                             </Text>
                         </View>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color="#999" />
                 </TouchableOpacity>
 
-                {/* Logout */}
                 <TouchableOpacity style={styles.settingItem} onPress={handleLogout}>
                     <View style={styles.settingLeft}>
                         <View style={[styles.iconBox, { backgroundColor: '#FFEBEE' }]}>
@@ -133,92 +131,19 @@ const SettingsScreen = ({ navigation }: any) => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#0D47A1' },
-
-    // Header
-    header: {
-        backgroundColor: '#0D47A1',
-        paddingBottom: 30,
-        alignItems: 'center',
-    },
-    backBtn: {
-        position: 'absolute',
-        left: 15,
-        top: 10,
-        padding: 5,
-    },
-    profileSection: {
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    avatarContainer: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    userName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 4,
-    },
-    userAddress: {
-        fontSize: 13,
-        color: 'rgba(255,255,255,0.8)',
-    },
-
-    // Content
-    content: {
-        flex: 1,
-        backgroundColor: '#F5F5F5',
-        borderTopLeftRadius: 25,
-        borderTopRightRadius: 25,
-        paddingTop: 20,
-    },
-    sectionTitle: {
-        fontSize: 14,
-        color: '#666',
-        fontWeight: '600',
-        marginHorizontal: 20,
-        marginBottom: 10,
-        marginTop: 10,
-    },
-    settingItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: '#fff',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        marginHorizontal: 15,
-        marginBottom: 8,
-        borderRadius: 12,
-    },
-    settingLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-    },
-    iconBox: {
-        width: 40,
-        height: 40,
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    settingText: {
-        fontSize: 15,
-        color: '#333',
-        fontWeight: '500',
-    },
-    settingSubText: {
-        fontSize: 12,
-        color: '#999',
-        marginTop: 2,
-    },
+    header: { backgroundColor: '#0D47A1', paddingBottom: 30, alignItems: 'center' },
+    backBtn: { position: 'absolute', left: 15, top: 10, padding: 5 },
+    profileSection: { alignItems: 'center', marginTop: 20 },
+    avatarContainer: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+    userName: { fontSize: 18, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
+    userAddress: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
+    content: { flex: 1, backgroundColor: '#F5F5F5', borderTopLeftRadius: 25, borderTopRightRadius: 25, paddingTop: 20 },
+    sectionTitle: { fontSize: 14, color: '#666', fontWeight: '600', marginHorizontal: 20, marginBottom: 10, marginTop: 10 },
+    settingItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', paddingVertical: 14, paddingHorizontal: 20, marginHorizontal: 15, marginBottom: 8, borderRadius: 12 },
+    settingLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    iconBox: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+    settingText: { fontSize: 15, color: '#333', fontWeight: '500' },
+    settingSubText: { fontSize: 12, color: '#999', marginTop: 2 },
 });
 
 export default SettingsScreen;

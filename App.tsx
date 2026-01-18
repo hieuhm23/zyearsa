@@ -16,27 +16,39 @@ import CustomerScreen from './src/screens/CustomerScreen';
 import StaffScreen from './src/screens/StaffScreen';
 import CashflowScreen from './src/screens/CashflowScreen';
 import ReportScreen from './src/screens/ReportScreen';
+import ProductDetailScreen from './src/screens/ProductDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
 import { StatusBar } from 'expo-status-bar';
 
-import { AuthProvider } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { View, ActivityIndicator } from 'react-native';
 
-export default function App() {
+const RootNavigator = () => {
+  const { session, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F7FA' }}>
+        <ActivityIndicator size="large" color="#0288D1" />
+      </View>
+    );
+  }
+
   return (
-    <AuthProvider>
-      <NavigationContainer>
-        <StatusBar style="dark" />
-        <Stack.Navigator
-          initialRouteName="Login"
-          screenOptions={{
-            headerShown: false,
-            animation: 'fade',
-            contentStyle: { backgroundColor: '#F5F7FA' }
-          }}
-        >
-          <Stack.Screen name="Login" component={LoginScreen} />
+    <Stack.Navigator
+      initialRouteName={session ? "Home" : "Login"}
+      screenOptions={{
+        headerShown: false,
+        animation: 'fade',
+        contentStyle: { backgroundColor: '#F5F7FA' }
+      }}
+    >
+      {!session ? (
+        <Stack.Screen name="Login" component={LoginScreen} />
+      ) : (
+        <>
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Pos" component={PosScreen} />
           <Stack.Screen name="Warehouse" component={WarehouseScreen} />
@@ -50,7 +62,19 @@ export default function App() {
           <Stack.Screen name="Audit" component={AuditScreen} />
           <Stack.Screen name="Transfer" component={TransferScreen} />
           <Stack.Screen name="Report" component={ReportScreen} />
-        </Stack.Navigator>
+          <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+        </>
+      )}
+    </Stack.Navigator>
+  );
+};
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <NavigationContainer>
+        <StatusBar style="dark" />
+        <RootNavigator />
       </NavigationContainer>
     </AuthProvider>
   );

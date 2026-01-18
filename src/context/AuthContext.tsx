@@ -33,6 +33,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Safety timeout: Nếu sau 3.5 giây không load xong thì tự tắt loading để vào app
+        const timer = setTimeout(() => {
+            if (loading) setLoading(false);
+        }, 3500);
+
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
@@ -41,6 +46,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }).catch(() => {
             // Fallback if Supabase not configured
             setLoading(false);
+        }).finally(() => {
+            clearTimeout(timer);
         });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -80,22 +87,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 return { data, error: null };
             }
 
-            // 2. Fallback to Local Mock Login (For development/demo without backend)
-            // Logic: If connect fail or invalid creds on supabase (likely 400), check local hardcode
-            // But here we explicitly allow fallback so the user can use the app immediately
-            if (email === 'admin' || email === 'admin@zyea.com') {
-                if (pass === '123123') {
-                    // Mock Session
-                    const mockSession: any = { user: { id: 'mock-admin', email: 'admin@zyea.com' }, access_token: 'mock' };
-                    setSession(mockSession);
-                    setUserProfile({ full_name: 'Hoàng Minh Hiếu', role: 'admin' });
-                    setLoading(false);
-                    return { data: { session: mockSession }, error: null };
-                }
-            }
-
             setLoading(false);
-            return { error: error || { message: 'Đăng nhập thất bại (Offline)' } };
+            return { error: error || { message: 'Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản.' } };
         } catch (e) {
             setLoading(false);
             return { error: e };

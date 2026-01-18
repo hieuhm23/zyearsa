@@ -6,8 +6,8 @@ import { Platform } from 'react-native';
 // ⚠️ TODO: THAY THẾ BẰNG URL VÀ KEY TỪ SUPABASE DASHBOARD CỦA BẠN
 // 1. Vào https://supabase.com -> Sign up -> New Project
 // 2. Vào Project Settings -> API -> Copy Project URL và Anon Key
-const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+const SUPABASE_URL = 'https://rhlusuhbrajumhdurqhf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJobHVzdWhicmFqdW1oZHVycWhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3NDcwNzcsImV4cCI6MjA4NDMyMzA3N30.28J658uJ-2Fe4jZqUBFw98MWfck6fmYmCRiOu5wbCMw';
 
 const ExpoSecureStoreAdapter = {
     getItem: (key: string) => {

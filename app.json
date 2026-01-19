@@ -19,7 +19,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.zyea.rsa",
       "infoPlist": {
-        "NSCameraUsageDescription": "Ứng dụng cần truy cập Camera để quét mã vạch thuốc."
+        "NSCameraUsageDescription": "Ứng dụng cần truy cập Camera để quét mã vạch thuốc.",
+        "NSPhotoLibraryUsageDescription": "Ứng dụng cần truy cập Thư viện ảnh để chọn ảnh sản phẩm."
       }
     },
     "android": {
@@ -31,7 +32,9 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES"
       ]
     },
     "web": {
@@ -42,6 +45,13 @@
         "expo-camera",
         {
           "cameraPermission": "Ứng dụng cần truy cập Camera để quét mã vạch thuốc."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Ứng dụng cần truy cập Thư viện ảnh để chọn ảnh sản phẩm.",
+          "cameraPermission": "Ứng dụng cần truy cập Camera để chụp ảnh sản phẩm."
         }
       ],
       "expo-updates",

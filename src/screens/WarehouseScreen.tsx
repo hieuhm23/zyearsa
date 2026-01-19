@@ -83,22 +83,27 @@ const WarehouseScreen = () => {
     };
 
     const pickImage = async () => {
-        // Xin quyền truy cập thư viện ảnh
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('Quyền bị từ chối', 'Cần cấp quyền truy cập thư viện ảnh để chọn ảnh sản phẩm.');
-            return;
-        }
+        try {
+            // Xin quyền truy cập thư viện ảnh
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Quyền bị từ chối', 'Cần cấp quyền truy cập thư viện ảnh để chọn ảnh sản phẩm. Vui lòng vào Cài đặt > Ứng dụng để cấp quyền.');
+                return;
+            }
 
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.7,
-        });
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.7,
+            });
 
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-            setProductImage(result.assets[0].uri);
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                setProductImage(result.assets[0].uri);
+            }
+        } catch (error) {
+            console.error('Pick image error:', error);
+            Alert.alert('Lỗi', 'Không thể mở thư viện ảnh. Vui lòng thử lại.');
         }
     };
 
